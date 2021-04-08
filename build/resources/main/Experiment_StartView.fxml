@@ -15,8 +15,8 @@
                 <Font size="32.0" />
             </font>
         </Label>
-        <Button layoutX="616.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
-      <Button layoutX="77.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+        <Button layoutX="616.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
+      <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
       <Label fx:id="deviceLable" layoutX="259.0" layoutY="227.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
       <Label fx:id="modeLable" layoutX="259.0" layoutY="254.0" prefHeight="27.0" prefWidth="377.0" text="MODE:  default" />
     </children>

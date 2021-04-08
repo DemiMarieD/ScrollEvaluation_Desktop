@@ -37,6 +37,6 @@
             <Button layoutX="245.0" layoutY="124.0" mnemonicParsing="false" onAction="#clickedNext" text="Next" />
          </children>
       </AnchorPane>
-      <Button layoutX="77.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+      <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
     </children>
 </AnchorPane>

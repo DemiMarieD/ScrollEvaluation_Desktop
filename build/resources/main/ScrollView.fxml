@@ -18,7 +18,7 @@
             </font>
         </Label>
 
-        <Button layoutX="616.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
-        <Button layoutX="77.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+        <Button layoutX="616.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
+        <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
     </children>
 </AnchorPane>
