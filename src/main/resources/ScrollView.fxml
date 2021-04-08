@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
 <?import javafx.scene.text.Font?>
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ScrollViewController"
-            fx:id="pane"  prefHeight="600.0" prefWidth="900.0">
-    <children>
-        <Label layoutX="373.0" layoutY="127.0" prefHeight="85.0" prefWidth="155.0" text="SCROLL VIEW">
-            <font>
-                <Font size="32.0" />
-            </font>
-        </Label>
 
-        <Button layoutX="616.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
-        <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ScrollViewController">
+    <children>
+        <Button layoutX="760.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="107.0" text="Next &gt;" />
+        <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />
+          <AnchorPane layoutX="157.0" layoutY="15.0" minHeight="0.0" minWidth="0.0" prefHeight="570.0" prefWidth="587.0">
+         <children>
+              <ScrollPane fx:id="scrollPane" layoutY="-3.0" prefHeight="577.0" prefWidth="587.0" />
+         </children>
+      </AnchorPane>
     </children>
 </AnchorPane>
