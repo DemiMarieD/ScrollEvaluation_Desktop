@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RichTextViewController">
+    <children>
+        <Button layoutX="760.0" layoutY="516.0" mnemonicParsing="false" onAction="#print" prefHeight="39.0" prefWidth="107.0" text="Print" />
+        <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />
+          <AnchorPane layoutX="207.0" layoutY="15.0" minHeight="0.0" minWidth="0.0" prefHeight="570.0" prefWidth="537.0">
+         <children>
+              <ScrollPane fx:id="scrollPane" layoutX="2.0" layoutY="-1.0" prefHeight="570.0" prefWidth="531.0" />
+         </children>
+      </AnchorPane>
+      <Pane fx:id="frame" layoutX="181.0" layoutY="176.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: red;" AnchorPane.bottomAnchor="224.0" AnchorPane.topAnchor="176.0" />
+    </children>
+</AnchorPane>

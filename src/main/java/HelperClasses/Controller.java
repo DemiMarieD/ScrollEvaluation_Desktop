@@ -1,11 +1,13 @@
 package HelperClasses;
 
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 
@@ -19,6 +21,9 @@ public class Controller {
     public void initData(Communicator communicator, Data data) {
         this.communicator = communicator;
         this.data = data;
+    }
+
+    public void onLoad(){
     }
 
     public void incomingMessage(String message) {
@@ -40,6 +45,17 @@ public class Controller {
 
         //set stage
         Stage window = (Stage) pane.getScene().getWindow();
+        window.addEventHandler(WindowEvent.WINDOW_SHOWING, new  EventHandler<WindowEvent>()
+        {
+            @Override
+            public void handle(WindowEvent window)
+            {
+                System.out.println("on load handler");
+                //todo not called...
+                controller.onLoad();
+            }
+        });
+
         window.setScene(newScene);
         window.show();
     }

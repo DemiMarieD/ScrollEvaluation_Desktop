@@ -3,27 +3,43 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.InlineCssTextArea;
+import org.fxmisc.richtext.LineNumberFactory;
 
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.function.IntFunction;
 
-public class ScrollViewController extends Controller {
+public class RichTextViewController extends Controller {
 
+    @FXML
+    private  Pane frame;
     @FXML
     private ScrollPane scrollPane;
 
+    private InlineCssTextArea textArea;
     private final VBox scrollContent = new VBox();
 
     // For Moose Scrolling
     private Thread scrollThread;
     private Robot robot;
 
+    private int frameSize = 50; // px
+    private int targetP = 40;
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -40,64 +56,78 @@ public class ScrollViewController extends Controller {
             e.printStackTrace();
         }
 
-        setTextPanel(scrollPane, scrollContent);
+       // setTextPanel(scrollPane, scrollContent);
+
+
+        textArea = new InlineCssTextArea();
+
+        IntFunction<Node> numberFactory = LineNumberFactory.get(textArea);
+        IntFunction<Node> graphicFactory = line -> {
+            VBox vbox = new VBox(
+                    numberFactory.apply(line));
+            vbox.setAlignment(Pos.CENTER_LEFT);
+            return vbox;
+        };
+
+        textArea.setParagraphGraphicFactory(graphicFactory);
+        textArea.appendText(getText("src/main/resources/files/dogstory.txt"));
+        textArea.setWrapText(true);
+        textArea.setPadding(new Insets(0,10,0,0));
+        //paragraph = "line number"+1 (bc starts at 0)
+
+        int l = textArea.getParagraphLength(targetP);
+        textArea.setStyle(targetP, 0, l, "-rtfx-background-color: red;");
+
+        scrollPane.setContent(textArea);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
     }
 
-    public void setTextPanel(ScrollPane pane, VBox contentBox){
-        javafx.scene.control.Label txt = new javafx.scene.control.Label();
-        txt.setText(getText("src/main/resources/files/dogstory.txt"));
-        txt.setWrapText(true);
-
-        contentBox.getChildren().add(txt);
-        contentBox.setSpacing(10);
-        contentBox.setPadding(new Insets(10));
-        contentBox.setFillWidth(true);
-        pane.setFitToWidth(true);
-
-        pane.setContent(contentBox);
-        //  scrollPane_right.setPannable(true); // it means that the user should be able to pan the viewport by using the mouse.
-        pane.setVvalue(0);
-
-        //addListeners(pane); //Right now not doing anything
+    @Override
+    public void onLoad() {
+        //todo set up frame size/position 
+        scrollPane.setVvalue(0);
+        System.out.println(scrollPane.getBoundsInParent().getCenterY());
     }
 
-    public void addListeners(javafx.scene.control.ScrollPane pane){
-        pane.vvalueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                //todo smth when scrolled
+    public void print(ActionEvent actionEvent) {
+        System.out.println("___________________________");
+        double centerY = scrollPane.getBoundsInParent().getCenterY();
+        System.out.println("Center Y " + centerY);
+
+        double nCenterY = frame.getBoundsInParent().getCenterY();
+        System.out.println("Center Y " + nCenterY);
+
+        System.out.println("------------------------");
+
+        System.out.println("(logical) Lines of Text " + textArea.getParagraphs().size());
+        System.out.println("Length of Text " + textArea.getLength());
+        System.out.println("Length of P: " + textArea.getParagraphLength(targetP));
+        System.out.println("Lines of P: " + textArea.getParagraphLinesCount(targetP));
+
+        System.out.println("------------------------");
+
+        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetP); //values fit more P 41 (aka index 42)
+        if(!bounds.isEmpty()) {
+            double lineY_min = bounds.get().getMinY();
+            double lineY_max = bounds.get().getMaxY();
+          // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
+
+            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
+            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
+          // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
+
+            if(frameY_min < lineY_min && frameY_max > lineY_max){
+                System.out.println("IN FRAME !");
             }
-        });
-
-        //When hover-value changed over Panel - send the updated infos to phone
-        pane.hoverProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                //todo smth when Focus changes (aka mouse hover)
-                //Only was needed for scrollbar
-                /*
-                if(scrollPane.isHover()) {
-                    Message m = new Message("server", "Info", "panelSize");
-                    m.setValue(String.valueOf(focusedPane.getHeight()));
-                    Message m2 = new Message("server", "Info", "contentSize");
-                    m2.setValue(String.valueOf(focusedContent.getHeight()));
-                    Message m3 = new Message("server", "Info", "scrollValue");
-                    m3.setValue(String.valueOf(pane.getVvalue()));
-
-                    getCommunicator().sendMessage(m.makeMessage());
-                    getCommunicator().sendMessage(m2.makeMessage());
-                    getCommunicator().sendMessage(m3.makeMessage());
-                }else{
-                    Message m = new Message("server", "Info", "focusNull");
-                    getCommunicator().sendMessage(m.makeMessage());
-                }
-                 */
-            }
-        });
+        }
+        //System.out.println("Bounds*2 " + textArea.getVisibleParagraphBoundsOnScreen(40)); //index should be 0-number lines visible?!
     }
+
 
     public void clickedNext(ActionEvent actionEvent) throws IOException {
-        goToView("RichTextView.fxml");
+        //goToView(".fxml");
     }
 
     public void clickedBack(ActionEvent actionEvent) throws IOException {

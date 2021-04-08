@@ -2,6 +2,7 @@ import HelperClasses.*;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
@@ -9,6 +10,7 @@ import javafx.scene.layout.AnchorPane;
 import java.io.IOException;
 
 public class ConnectMooseController extends Controller {
+
 
     //Layout Elements
     @FXML
@@ -23,6 +25,8 @@ public class ConnectMooseController extends Controller {
     private  Label label_ip;
     @FXML
     private  Label label_port;
+    @FXML
+    private Button nextBtn;
 
     //Variables
 
@@ -51,10 +55,12 @@ public class ConnectMooseController extends Controller {
             ConnectInfo_Pane.setVisible(false);
             ConnectSuccess_Pane.setVisible(true);
             ScrollMode_pane.setVisible(true);
+            nextBtn.setVisible(true);
         }else{
             ConnectInfo_Pane.setVisible(true);
             ConnectSuccess_Pane.setVisible(false);
             ScrollMode_pane.setVisible(false);
+            nextBtn.setVisible(false);
         }
     }
 
@@ -75,6 +81,7 @@ public class ConnectMooseController extends Controller {
         getCommunicator().sendMessage(new Message("Server", "Next", "Connected").makeMessage());
 
         int selectedIndex = cb.getSelectionModel().getSelectedIndex();
+        //todo check index and give error on missing selection !
         getData().setMode(modes[selectedIndex]);
        // getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", getData().getMode().getValue()).makeMessage());
 
