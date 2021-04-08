@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ConnectMooseController">
+    <children>
+        <Label layoutX="393.0" layoutY="94.0" prefHeight="85.0" prefWidth="116.0" text="MOOSE">
+            <font>
+                <Font size="32.0" />
+            </font></Label>
+        <Label layoutX="375.0" layoutY="179.0" text="Connect to Moose!" />
+      <AnchorPane fx:id="ConnectInfo_Pane" layoutX="155.0" layoutY="260.0" prefHeight="133.0" prefWidth="591.0">
+         <children>
+           <Label fx:id="label_ip" layoutX="56.0" layoutY="31.0" text="IP" />
+           <Label fx:id="label_port" layoutX="55.0" layoutY="67.0" text="Port" />
+              <Separator layoutX="16.0" layoutY="115.0" prefHeight="3.0" prefWidth="558.0" />
+              <Separator layoutX="16.0" layoutY="11.0" prefHeight="3.0" prefWidth="558.0" />
+         </children>
+      </AnchorPane>
+        <AnchorPane fx:id="ConnectSuccess_Pane" layoutX="155.0" layoutY="260.0" prefHeight="133.0" prefWidth="591.0">
+            <children>
+                <Label layoutX="56.0" layoutY="31.0" text="SUCCESSFULLY CONNECTED" />
+                <Separator layoutX="16.0" layoutY="115.0" prefHeight="3.0" prefWidth="558.0" />
+                <Separator layoutX="16.0" layoutY="11.0" prefHeight="3.0" prefWidth="558.0" />
+            </children>
+        </AnchorPane>
+      <AnchorPane fx:id="ScrollMode_pane" layoutX="175.0" layoutY="403.0" prefHeight="199.0" prefWidth="551.0">
+         <children>
+              <ComboBox fx:id="cb" layoutX="283.0" layoutY="34.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
+            <Label layoutX="39.0" layoutY="33.0" prefHeight="27.0" prefWidth="229.0" text="Select scrolling mode:" />
+            <Button layoutX="245.0" layoutY="124.0" mnemonicParsing="false" onAction="#clickedNext" text="Next" />
+         </children>
+      </AnchorPane>
+      <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+    </children>
+</AnchorPane>

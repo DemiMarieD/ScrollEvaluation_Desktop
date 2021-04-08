@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ScrollViewController"
+            fx:id="pane"  prefHeight="600.0" prefWidth="900.0">
+    <children>
+        <Label layoutX="373.0" layoutY="127.0" prefHeight="85.0" prefWidth="155.0" text="SCROLL VIEW">
+            <font>
+                <Font size="32.0" />
+            </font>
+        </Label>
+
+        <Button layoutX="616.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
+        <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+    </children>
+</AnchorPane>

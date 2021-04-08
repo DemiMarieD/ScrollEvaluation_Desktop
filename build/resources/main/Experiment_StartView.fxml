@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ExperimentController">
+    <children>
+        <Label layoutX="302.0" layoutY="115.0" prefHeight="85.0" prefWidth="297.0" text="EXPERIMENT SET UP">
+            <font>
+                <Font size="32.0" />
+            </font>
+        </Label>
+        <Button layoutX="616.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="204.0" text="Next &gt;" />
+      <Button layoutX="77.0" layoutY="594.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
+      <Label fx:id="deviceLable" layoutX="259.0" layoutY="227.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
+      <Label fx:id="modeLable" layoutX="259.0" layoutY="254.0" prefHeight="27.0" prefWidth="377.0" text="MODE:  default" />
+    </children>
+</AnchorPane>

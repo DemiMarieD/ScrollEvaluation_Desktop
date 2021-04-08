@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'application' //helps us run the application with the help of gradle so include the dependency
+    id 'org.openjfx.javafxplugin' version '0.0.9'
+}
+
+mainClassName = 'MainApplication' //the name of the main class for the application plugin
+sourceCompatibility = 11
+group 'com.dd'
+version '1.0'
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'org.fxmisc.flowless', name: 'flowless', version: '0.6.3'
+}
+
+javafx {
+    version = "15.0.1"
+    //add required modules here; as they can be found on https://openjfx.io/javadoc/11/
+    modules = [ 'javafx.controls', 'javafx.base', 'javafx.graphics', 'javafx.fxml' ]
+}
+
+// Run by clicking "gradle" on the right -> Tasks - application - run
