@@ -33,7 +33,7 @@ public class ScrollViewController extends Controller {
             getCommunicator().sendMessage(new Message("Server", "Mode", getData().getMode().getValue()).makeMessage());
         }
 
-        // Robot is used for click actions
+        // Robot is used for click actions with Moose
         try {
             robot = new Robot();
         } catch (AWTException e) {
@@ -125,6 +125,7 @@ public class ScrollViewController extends Controller {
     }
 
 
+    // --------------------  Moose Scrolling ------------------------------------
 
     // Incoming Messages from Moose for scrolling
     @Override
@@ -175,7 +176,7 @@ public class ScrollViewController extends Controller {
                 if (m.getActionName().equals("deltaY")) {
 
                     //stop old thread
-                    if (scrollPane.isHover() && !scrollThread.isInterrupted()) {
+                    if (scrollPane.isHover() && scrollThread != null && !scrollThread.isInterrupted()) {
                         scrollThread.interrupt();
                     }
 
@@ -226,9 +227,7 @@ public class ScrollViewController extends Controller {
 
     }
 
-
-    // --------------------  Methods for Moose Scrolling ------------------------------------
-
+    // Scroll by px
     public void verticalScrollByPx(ScrollPane pane, VBox paneContent, double deltaPx){
         //ScrollPane V / H values are min 0 max 1 -> %
         double change = deltaPx/ paneContent.getHeight();
@@ -241,6 +240,7 @@ public class ScrollViewController extends Controller {
         pane.setVvalue(newVal);
     }
 
+    // Continuous Scrolling
     public class ScrollThread implements Runnable{
         int time;
         double deltaPx;

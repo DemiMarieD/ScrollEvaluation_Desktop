@@ -72,7 +72,7 @@ public class ConnectMooseController extends Controller {
 
     public void clickedNext(ActionEvent actionEvent) throws IOException {
         //Inform Client/Moose
-        getCommunicator().sendMessage(new Message("Server", "Next", "NewScroll").makeMessage());
+        getCommunicator().sendMessage(new Message("Server", "Next", "Connected").makeMessage());
 
         int selectedIndex = cb.getSelectionModel().getSelectedIndex();
         getData().setMode(modes[selectedIndex]);
