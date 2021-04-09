@@ -1,5 +1,6 @@
 package HelperClasses;
 
+import com.sun.javafx.scene.SceneEventDispatcher;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,19 +46,11 @@ public class Controller {
 
         //set stage
         Stage window = (Stage) pane.getScene().getWindow();
-        window.addEventHandler(WindowEvent.WINDOW_SHOWING, new  EventHandler<WindowEvent>()
-        {
-            @Override
-            public void handle(WindowEvent window)
-            {
-                System.out.println("on load handler");
-                //todo not called...
-                controller.onLoad();
-            }
-        });
 
         window.setScene(newScene);
         window.show();
+
+        controller.onLoad();
     }
 
 
@@ -73,6 +66,10 @@ public class Controller {
 
     public Data getData(){
         return data;
+    }
+
+    public Pane getMainPane(){
+        return pane;
     }
 
 }

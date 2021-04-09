@@ -1,6 +1,5 @@
 import HelperClasses.*;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
@@ -8,28 +7,29 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import org.fxmisc.richtext.CodeArea;
+import javafx.stage.Screen;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
 public class RichTextViewController extends Controller {
 
+
     @FXML
     private  Pane frame;
     @FXML
-    private ScrollPane scrollPane;
+    private ScrollPane scrollPane_parent;
+    private VirtualizedScrollPane<InlineCssTextArea> scrollPane;
 
     private InlineCssTextArea textArea;
     private final VBox scrollContent = new VBox();
@@ -38,8 +38,8 @@ public class RichTextViewController extends Controller {
     private Thread scrollThread;
     private Robot robot;
 
-    private int frameSize = 50; // px
-    private int targetP = 40;
+    private int frameSize_mm = 10; // mm
+    private int targetIndex = 41; // starts at 0
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -56,59 +56,87 @@ public class RichTextViewController extends Controller {
             e.printStackTrace();
         }
 
-       // setTextPanel(scrollPane, scrollContent);
+        setUpScrollPane();
 
+        Platform.runLater(() -> {
+            setUpPanesAndTarget();
+            scrollPane.scrollYToPixel(0);
+        });
+    }
 
+    public void setUpScrollPane(){
         textArea = new InlineCssTextArea();
-
         IntFunction<Node> numberFactory = LineNumberFactory.get(textArea);
         IntFunction<Node> graphicFactory = line -> {
-            VBox vbox = new VBox(
+            HBox hbox = new HBox(
                     numberFactory.apply(line));
-            vbox.setAlignment(Pos.CENTER_LEFT);
-            return vbox;
+            hbox.setAlignment(Pos.CENTER_LEFT);
+            return hbox;
         };
-
         textArea.setParagraphGraphicFactory(graphicFactory);
         textArea.appendText(getText("src/main/resources/files/dogstory.txt"));
         textArea.setWrapText(true);
+        textArea.setEditable(false);
         textArea.setPadding(new Insets(0,10,0,0));
         //paragraph = "line number"+1 (bc starts at 0)
 
-        int l = textArea.getParagraphLength(targetP);
-        textArea.setStyle(targetP, 0, l, "-rtfx-background-color: red;");
+        scrollPane = new VirtualizedScrollPane<>(textArea);
+        scrollPane_parent.setContent(scrollPane);
 
-        scrollPane.setContent(textArea);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
+        scrollPane_parent.setFitToWidth(true);
+        scrollPane_parent.setFitToHeight(true);
+    }
+
+    public void setUpPanesAndTarget(){
+        double mainPaneHeight = getMainPane().getHeight();
+        //Center Scroll Pane in Y
+        double topMarginScrollPane = (mainPaneHeight - scrollPane_parent.getHeight()) / 2;
+        scrollPane_parent.setLayoutY(topMarginScrollPane);
+
+        //Center Frame in Y
+        updateFrame();
+        frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
+
+        Platform.runLater(() -> {
+            setTarget();
+        });
+    }
+
+    public void setTarget() {
+        //highlight target
+        int l = textArea.getParagraphLength(targetIndex);
+        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+
+        //Set Target indicator
+        double centerP = textArea.getAbsolutePosition(targetIndex,textArea.getParagraphLength(targetIndex)/2);
+        double relativePos =  centerP / textArea.getLength();
+        try {
+            Image img = new Image(new FileInputStream("src/main/resources/files/arrow.png"), 50, 0, true, false);
+            ImageView imageView = new ImageView(img);
+            getMainPane().getChildren().add(imageView);
+            //todo still to improve.. not optimal position..
+            imageView.setX(scrollPane_parent.getBoundsInParent().getMaxX());
+            imageView.setY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() * relativePos) - (imageView.getFitHeight()/2));
+
+        } catch (FileNotFoundException e) {
+            System.out.println("Error loading image");
+            e.printStackTrace();
+        }
 
     }
 
-    @Override
-    public void onLoad() {
-        //todo set up frame size/position 
-        scrollPane.setVvalue(0);
-        System.out.println(scrollPane.getBoundsInParent().getCenterY());
+    public void updateFrame(){
+       double frameSize_px = toPx(frameSize_mm);
+       frame.setPrefHeight(frameSize_px);
+
+       double mainPaneHeight = getMainPane().getHeight();
+       double topMarginFrame = (mainPaneHeight - frameSize_px) / 2;
+       frame.setLayoutY(topMarginFrame);
     }
 
     public void print(ActionEvent actionEvent) {
-        System.out.println("___________________________");
-        double centerY = scrollPane.getBoundsInParent().getCenterY();
-        System.out.println("Center Y " + centerY);
 
-        double nCenterY = frame.getBoundsInParent().getCenterY();
-        System.out.println("Center Y " + nCenterY);
-
-        System.out.println("------------------------");
-
-        System.out.println("(logical) Lines of Text " + textArea.getParagraphs().size());
-        System.out.println("Length of Text " + textArea.getLength());
-        System.out.println("Length of P: " + textArea.getParagraphLength(targetP));
-        System.out.println("Lines of P: " + textArea.getParagraphLinesCount(targetP));
-
-        System.out.println("------------------------");
-
-        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetP); //values fit more P 41 (aka index 42)
+        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
         if(!bounds.isEmpty()) {
             double lineY_min = bounds.get().getMinY();
             double lineY_max = bounds.get().getMaxY();
@@ -124,7 +152,6 @@ public class RichTextViewController extends Controller {
         }
         //System.out.println("Bounds*2 " + textArea.getVisibleParagraphBoundsOnScreen(40)); //index should be 0-number lines visible?!
     }
-
 
     public void clickedNext(ActionEvent actionEvent) throws IOException {
         //goToView(".fxml");
@@ -154,6 +181,12 @@ public class RichTextViewController extends Controller {
         return content;
     }
 
+    public double toPx(int mm){
+        // dpi = pixels/inch
+        double dpi = Screen.getPrimary().getDpi();
+        // mm  * pixels/inch * inch/mm
+        return (mm * dpi) / 25.4;
+    }
 
     // --------------------  Moose Scrolling ------------------------------------
 
@@ -171,7 +204,7 @@ public class RichTextViewController extends Controller {
             if (m.getActionType().equals("Scroll")){
                 if(m.getActionName().equals("deltaY")) {
                     double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                    if(scrollPane.isHover()){ verticalScrollByPx(scrollPane, scrollContent, deltaY);}
+                    if(scrollPane.isHover()){ scrollPane.scrollYBy(deltaY);}
                 }
 
 
@@ -179,7 +212,7 @@ public class RichTextViewController extends Controller {
             } else if (m.getActionType().equals("Flick")){
                 if(m.getActionName().equals("deltaY")) {
                     double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                    if(scrollPane.isHover()){ verticalScrollByPx(scrollPane, scrollContent, deltaY);}
+                    if(scrollPane.isHover()){scrollPane.scrollYBy(deltaY);}
 
                 }else if(m.getActionName().equals("speed")){
                     double pxPerMs = Double.parseDouble(m.getValue());
@@ -196,7 +229,7 @@ public class RichTextViewController extends Controller {
                 if (m.getActionName().equals("deltaAngle")) {
                     double deltaY = Double.parseDouble(m.getValue());
                     if (scrollPane.isHover()) {
-                        verticalScrollByPx(scrollPane, scrollContent, deltaY);
+                        scrollPane.scrollYBy(deltaY);
                     }
                 }
 
@@ -257,18 +290,6 @@ public class RichTextViewController extends Controller {
 
     }
 
-    // Scroll by px
-    public void verticalScrollByPx(ScrollPane pane, VBox paneContent, double deltaPx){
-        //ScrollPane V / H values are min 0 max 1 -> %
-        double change = deltaPx/ paneContent.getHeight();
-        double newVal = pane.getVvalue() + change;
-
-        //use math min to not exceed the bounds
-        newVal = Math.max(pane.getVmin(), newVal); //not smaller then 0.0
-        newVal = Math.min(newVal, pane.getVmax()); //not bigger then max
-
-        pane.setVvalue(newVal);
-    }
 
     // Continuous Scrolling
     public class ScrollThread implements Runnable{
@@ -283,7 +304,7 @@ public class RichTextViewController extends Controller {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     if (scrollPane.isHover()) {
-                        verticalScrollByPx(scrollPane, scrollContent, deltaPx);
+                        scrollPane.scrollYBy(deltaPx);
                         Thread.sleep(time); //1 min = 60*1000, 1 sec = 1000
                     }else{
                         scrollThread.interrupt();

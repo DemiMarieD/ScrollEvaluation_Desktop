@@ -23,7 +23,7 @@ dependencies {
 javafx {
     version = "15.0.1"
     //add required modules here; as they can be found on https://openjfx.io/javadoc/11/
-    modules = [ 'javafx.controls', 'javafx.base', 'javafx.graphics', 'javafx.fxml' ]
+    modules = [ 'javafx.controls', 'javafx.base', 'javafx.graphics', 'javafx.media', 'javafx.fxml' ]
 }
 
 // Run by clicking "gradle" on the right -> Tasks - application - run
