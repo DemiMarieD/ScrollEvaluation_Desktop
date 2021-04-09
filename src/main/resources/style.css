@@ -1,0 +1,21 @@
+.scrollArea, .scrollArea >* {
+    -fx-background-color: transparent !important;
+}
+
+.scrollArea .scroll-bar:vertical {
+    -fx-background-color: transparent !important;
+    -fx-border-color: black;
+    -fx-pref-width: 20px;
+}
+
+.scrollArea .scroll-bar:vertical .thumb  {
+    -fx-background-color: black !important;
+}
+
+.scrollArea .scroll-bar:vertical .track {
+
+}
+
+.scrollArea .scroll-bar:vertical .decrement-button{
+
+}

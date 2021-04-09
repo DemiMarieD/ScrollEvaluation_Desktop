@@ -10,11 +10,16 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
+<?import java.net.URL?>
 <AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RichTextViewController">
     <children>
+        <Pane fx:id="indicator" layoutX="142.0" layoutY="272.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: #00ccff;" />
         <Button layoutX="760.0" layoutY="516.0" mnemonicParsing="false" onAction="#print" prefHeight="39.0" prefWidth="107.0" text="Print" />
         <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />
         <ScrollPane fx:id="scrollPane_parent" layoutX="185.0" prefHeight="570.0" prefWidth="531.0" />
-      <Pane fx:id="frame" layoutX="142.0" layoutY="272.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: red;" />
+        <Pane fx:id="frame" layoutX="142.0" layoutY="272.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: red;" />
     </children>
+    <stylesheets>
+        <URL value="@style.css" />
+    </stylesheets>
 </AnchorPane>

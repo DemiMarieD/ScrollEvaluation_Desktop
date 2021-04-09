@@ -23,8 +23,10 @@ import java.util.Optional;
 import java.util.function.IntFunction;
 
 public class RichTextViewController extends Controller {
+    final int scrollBarWidth = 20; //px
 
-
+    @FXML
+    private Pane indicator;
     @FXML
     private  Pane frame;
     @FXML
@@ -57,6 +59,8 @@ public class RichTextViewController extends Controller {
         }
 
         setUpScrollPane();
+        indicator.setPrefHeight(20);
+        indicator.setPrefWidth(scrollBarWidth-2);
 
         Platform.runLater(() -> {
             setUpPanesAndTarget();
@@ -77,6 +81,7 @@ public class RichTextViewController extends Controller {
 
         scrollPane_parent.setFitToWidth(true);
         scrollPane_parent.setFitToHeight(true);
+        scrollPane_parent.getStyleClass().add("scrollArea");
     }
 
     public void setUpPanesAndTarget(){
@@ -101,6 +106,9 @@ public class RichTextViewController extends Controller {
         //Center Frame in Y
         updateFrame();
         frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
+        //
+        indicator.setLayoutX(scrollPane_parent.getBoundsInParent().getMaxX() - scrollBarWidth );
+        indicator.setLayoutY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() / 2));
 
         Platform.runLater(() -> {
             addLineNumbers();
@@ -127,6 +135,12 @@ public class RichTextViewController extends Controller {
         //highlight target
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+
+        /*
+        todo
+        indicator.setPrefHeight();
+        indicator.setLayoutY();
+         */
 
         //Set Target indicator
         double centerP = textArea.getAbsolutePosition(targetIndex,textArea.getParagraphLength(targetIndex)/2);
