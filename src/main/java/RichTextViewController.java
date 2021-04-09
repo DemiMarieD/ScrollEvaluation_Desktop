@@ -66,22 +66,11 @@ public class RichTextViewController extends Controller {
 
     public void setUpScrollPane(){
         textArea = new InlineCssTextArea();
-
-        //** Add line numbers
-        IntFunction<Node> numberFactory = LineNumberFactory.get(textArea);
-
-        IntFunction<Node> graphicFactory = line -> {
-            HBox hbox = new HBox(
-                    numberFactory.apply(line));
-            hbox.setAlignment(Pos.CENTER_LEFT);
-            return hbox;
-        };
-        textArea.setParagraphGraphicFactory(graphicFactory);
-
         textArea.appendText(getText("src/main/resources/files/loremIpsum.txt"));
         textArea.setWrapText(true);
         textArea.setEditable(false);
-        textArea.setPadding(new Insets(0,10,0,0));
+        //padding to leave room for line numbers
+        textArea.setPadding(new Insets(0,0,0,60));
 
         scrollPane = new VirtualizedScrollPane<>(textArea);
         scrollPane_parent.setContent(scrollPane);
@@ -114,9 +103,25 @@ public class RichTextViewController extends Controller {
         frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
 
         Platform.runLater(() -> {
+            addLineNumbers();
             setTarget();
         });
     }
+
+    public void addLineNumbers(){
+        //** Add line numbers
+        IntFunction<Node> numberFactory = LineNumberFactory.get(textArea);
+        IntFunction<Node> graphicFactory = line -> {
+            HBox hbox = new HBox(
+                    numberFactory.apply(line));
+            hbox.setAlignment(Pos.CENTER_LEFT);
+            return hbox;
+        };
+        textArea.setParagraphGraphicFactory(graphicFactory);
+        //remove padding
+        textArea.setPadding(new Insets(0,0,0,0));
+    }
+
 
     public void setTarget() {
         //highlight target
@@ -127,6 +132,7 @@ public class RichTextViewController extends Controller {
         double centerP = textArea.getAbsolutePosition(targetIndex,textArea.getParagraphLength(targetIndex)/2);
         double relativePos =  centerP / textArea.getLength();
         try {
+            //todo maybe make image behind (transparent) scrollbar?
             Image img = new Image(new FileInputStream("src/main/resources/files/arrow.png"), 50, 0, true, false);
             ImageView imageView = new ImageView(img);
             getMainPane().getChildren().add(imageView);
@@ -151,7 +157,6 @@ public class RichTextViewController extends Controller {
     }
 
     public void print(ActionEvent actionEvent) {
-
         Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
         if(!bounds.isEmpty()) {
             double lineY_min = bounds.get().getMinY();
