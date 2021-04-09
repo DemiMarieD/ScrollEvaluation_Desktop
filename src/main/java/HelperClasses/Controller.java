@@ -50,7 +50,7 @@ public class Controller {
         window.setScene(newScene);
         window.show();
 
-        controller.onLoad();
+      //  controller.onLoad();
     }
 
 

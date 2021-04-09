@@ -38,7 +38,7 @@ public class RichTextViewController extends Controller {
     private Thread scrollThread;
     private Robot robot;
 
-    private int frameSize_mm = 10; // mm
+    private int frameSize_mm = 30; // mm
     private int targetIndex = 41; // starts at 0
 
     @Override
@@ -66,7 +66,10 @@ public class RichTextViewController extends Controller {
 
     public void setUpScrollPane(){
         textArea = new InlineCssTextArea();
+
+        //** Add line numbers
         IntFunction<Node> numberFactory = LineNumberFactory.get(textArea);
+
         IntFunction<Node> graphicFactory = line -> {
             HBox hbox = new HBox(
                     numberFactory.apply(line));
@@ -74,11 +77,11 @@ public class RichTextViewController extends Controller {
             return hbox;
         };
         textArea.setParagraphGraphicFactory(graphicFactory);
-        textArea.appendText(getText("src/main/resources/files/dogstory.txt"));
+
+        textArea.appendText(getText("src/main/resources/files/loremIpsum.txt"));
         textArea.setWrapText(true);
         textArea.setEditable(false);
         textArea.setPadding(new Insets(0,10,0,0));
-        //paragraph = "line number"+1 (bc starts at 0)
 
         scrollPane = new VirtualizedScrollPane<>(textArea);
         scrollPane_parent.setContent(scrollPane);
@@ -88,11 +91,24 @@ public class RichTextViewController extends Controller {
     }
 
     public void setUpPanesAndTarget(){
+        //** Split each line of paragraph
+        for(int i = 0; i < textArea.getParagraphs().size(); i++){
+            if(textArea.getParagraphLinesCount(i) > 1) {
+                textArea.moveTo(i, 0);
+                int positionsUntilEndOfLine = textArea.getCurrentLineEndInParargraph();
+                int endOfLine = textArea.getAbsolutePosition(i, 0) + positionsUntilEndOfLine;
+                textArea.insertText(endOfLine, "\n");
+                //delete space " " that would otherwise be now at the beginning of the new line
+                textArea.deleteText(endOfLine+1, endOfLine+2);
+            }
+        }
+
+
+        //** Position Panels
         double mainPaneHeight = getMainPane().getHeight();
         //Center Scroll Pane in Y
         double topMarginScrollPane = (mainPaneHeight - scrollPane_parent.getHeight()) / 2;
         scrollPane_parent.setLayoutY(topMarginScrollPane);
-
         //Center Frame in Y
         updateFrame();
         frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
@@ -116,7 +132,7 @@ public class RichTextViewController extends Controller {
             getMainPane().getChildren().add(imageView);
             //todo still to improve.. not optimal position..
             imageView.setX(scrollPane_parent.getBoundsInParent().getMaxX());
-            imageView.setY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() * relativePos) - (imageView.getFitHeight()/2));
+            imageView.setY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() * relativePos) - (img.getHeight()/2));
 
         } catch (FileNotFoundException e) {
             System.out.println("Error loading image");
