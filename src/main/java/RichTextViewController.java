@@ -1,14 +1,21 @@
 import HelperClasses.*;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -16,6 +23,7 @@ import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.Selection;
 
 import java.awt.*;
 import java.io.*;
@@ -25,6 +33,15 @@ import java.util.function.IntFunction;
 public class RichTextViewController extends Controller {
     final int scrollBarWidth = 20; //px
 
+    @FXML
+    private ComboBox cb;
+    @FXML
+    private TextField frameInput;
+    @FXML
+    private TextField targetInput;
+
+    @FXML
+    private Pane topPane;
     @FXML
     private Pane indicator;
     @FXML
@@ -43,6 +60,8 @@ public class RichTextViewController extends Controller {
     private int frameSize_mm = 30; // mm
     private int targetIndex = 41; // starts at 0
 
+    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK, ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING};
+
     @Override
     public void initData(Communicator communicator, Data data) {
         super.initData(communicator, data);
@@ -58,9 +77,33 @@ public class RichTextViewController extends Controller {
             e.printStackTrace();
         }
 
+        //Set mode depending on selection
+        if(data.getDevice() == Device.MOOSE) {
+            cb.setItems(FXCollections.observableArrayList(
+                    "Drag", "Flick", "Rate-Based", "Circle", "Rubbing")
+            );
+            cb.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    data.setMode(modes[newValue.intValue()]);
+                    String m = modes[newValue.intValue()].getValue();
+                    getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", m).makeMessage());
+                }
+            });
+        }else{
+            cb.setVisible(false);
+        }
+
+        getMainPane().addEventFilter(KeyEvent.KEY_PRESSED, event->{
+            if (event.getCode() == KeyCode.SPACE) {
+               boolean inFrame = checkTarget();
+               String txt = "Target in frame = " + inFrame;
+               Alert alert = new Alert(Alert.AlertType.INFORMATION, txt + " !", ButtonType.OK);
+               alert.showAndWait();
+            }
+        });
+
         setUpScrollPane();
-        indicator.setPrefHeight(20);
-        indicator.setPrefWidth(scrollBarWidth-2);
 
         Platform.runLater(() -> {
             setUpPanesAndTarget();
@@ -82,6 +125,9 @@ public class RichTextViewController extends Controller {
         scrollPane_parent.setFitToWidth(true);
         scrollPane_parent.setFitToHeight(true);
         scrollPane_parent.getStyleClass().add("scrollArea");
+
+        indicator.setPrefHeight(20);
+        indicator.setPrefWidth(scrollBarWidth-2);
     }
 
     public void setUpPanesAndTarget(){
@@ -113,6 +159,7 @@ public class RichTextViewController extends Controller {
         Platform.runLater(() -> {
             addLineNumbers();
             setTarget();
+            topPane.setVisible(false);
         });
     }
 
@@ -130,6 +177,17 @@ public class RichTextViewController extends Controller {
         textArea.setPadding(new Insets(0,0,0,0));
     }
 
+    public void setTargetFrame(ActionEvent actionEvent) {
+        int l = textArea.getParagraphLength(targetIndex);
+        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
+
+        targetIndex = Integer.parseInt(targetInput.getText());
+        frameSize_mm = Integer.parseInt(frameInput.getText());
+
+        setTarget();
+        updateFrame();
+    }
+
 
     public void setTarget() {
         //highlight target
@@ -144,20 +202,14 @@ public class RichTextViewController extends Controller {
 
         //Set Target indicator
         double centerP = textArea.getAbsolutePosition(targetIndex,textArea.getParagraphLength(targetIndex)/2);
-        double relativePos =  centerP / textArea.getLength();
-        try {
-            //todo maybe make image behind (transparent) scrollbar?
-            Image img = new Image(new FileInputStream("src/main/resources/files/arrow.png"), 50, 0, true, false);
-            ImageView imageView = new ImageView(img);
-            getMainPane().getChildren().add(imageView);
-            //todo still to improve.. not optimal position..
-            imageView.setX(scrollPane_parent.getBoundsInParent().getMaxX());
-            imageView.setY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() * relativePos) - (img.getHeight()/2));
+        double relativePos =  (centerP + (scrollPane_parent.getHeight()/2) ) / textArea.getLength();
 
-        } catch (FileNotFoundException e) {
-            System.out.println("Error loading image");
-            e.printStackTrace();
-        }
+        // indicator.setPrefHeight();
+
+        //makes line in bottom of screen
+        double yPos =  (scrollPane_parent.getBoundsInParent().getMinY()) + (scrollPane_parent.getHeight() * relativePos);
+        System.out.println(yPos);
+        indicator.setLayoutY(yPos);
 
     }
 
@@ -168,6 +220,22 @@ public class RichTextViewController extends Controller {
        double mainPaneHeight = getMainPane().getHeight();
        double topMarginFrame = (mainPaneHeight - frameSize_px) / 2;
        frame.setLayoutY(topMarginFrame);
+    }
+
+    public boolean checkTarget(){
+        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
+        if(!bounds.isEmpty()) {
+            double lineY_min = bounds.get().getMinY();
+            double lineY_max = bounds.get().getMaxY();
+            // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
+
+            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
+            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
+            // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
+
+            return frameY_min < lineY_min && frameY_max > lineY_max;
+        }
+        return false;
     }
 
     public void print(ActionEvent actionEvent) {
@@ -324,7 +392,6 @@ public class RichTextViewController extends Controller {
         }
 
     }
-
 
     // Continuous Scrolling
     public class ScrollThread implements Runnable{
