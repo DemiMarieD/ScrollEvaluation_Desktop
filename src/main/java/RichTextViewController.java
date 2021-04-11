@@ -19,6 +19,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
@@ -60,7 +61,9 @@ public class RichTextViewController extends Controller {
     private int frameSize_mm = 30; // mm
     private int targetIndex = 41; // starts at 0
 
-    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK, ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING};
+    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK,
+            ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
+            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB};
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -80,7 +83,7 @@ public class RichTextViewController extends Controller {
         //Set mode depending on selection
         if(data.getDevice() == Device.MOOSE) {
             cb.setItems(FXCollections.observableArrayList(
-                    "Drag", "Flick", "Rate-Based", "Circle", "Rubbing")
+                    "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", new Separator(), "Wheel", "Drag 2", "Thumb")
             );
             cb.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
                 @Override
@@ -96,10 +99,7 @@ public class RichTextViewController extends Controller {
 
         getMainPane().addEventFilter(KeyEvent.KEY_PRESSED, event->{
             if (event.getCode() == KeyCode.SPACE) {
-               boolean inFrame = checkTarget();
-               String txt = "Target in frame = " + inFrame;
-               Alert alert = new Alert(Alert.AlertType.INFORMATION, txt + " !", ButtonType.OK);
-               alert.showAndWait();
+               checkTarget();
             }
         });
 
@@ -222,7 +222,7 @@ public class RichTextViewController extends Controller {
        frame.setLayoutY(topMarginFrame);
     }
 
-    public boolean checkTarget(){
+    public void checkTarget(){
         Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
         if(!bounds.isEmpty()) {
             double lineY_min = bounds.get().getMinY();
@@ -233,9 +233,19 @@ public class RichTextViewController extends Controller {
             double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
             // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
 
-            return frameY_min < lineY_min && frameY_max > lineY_max;
+            if(frameY_min < lineY_min && frameY_max > lineY_max){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "SUCCESS", ButtonType.OK);
+                alert.showAndWait();
+
+            }else{
+                Alert alert = new Alert(Alert.AlertType.ERROR, "FALSE", ButtonType.OK);
+                alert.showAndWait();
+            }
+
+        }else{
+            Alert alert = new Alert(Alert.AlertType.ERROR, "", ButtonType.OK);
+            alert.showAndWait();
         }
-        return false;
     }
 
     public void print(ActionEvent actionEvent) {
@@ -303,31 +313,50 @@ public class RichTextViewController extends Controller {
         String mode = getData().getMode().getValue();
         if(mode.equals(m.getActionType())) {
 
-            //----- Normal Drag
-            if (m.getActionType().equals("Scroll")){
-                if(m.getActionName().equals("deltaY")) {
+            //----- Normal Drag or Rubbing
+            if (m.getActionType().equals("Scroll") || m.getActionType().equals("Rubbing") ||  m.getActionType().equals("Drag")) {
+                if (m.getActionName().equals("deltaY")) {
                     double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                    if(scrollPane.isHover()){ scrollPane.scrollYBy(deltaY);}
+                    if (scrollPane.isHover()) {
+                        scrollPane.scrollYBy(deltaY);
+                    }
                 }
 
+            // Dragging the thumb
+            } else if (m.getActionType().equals("Thumb")) {
+                if (m.getActionName().equals("deltaY")) {
+                    double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
+
+                    Text t = (Text) textArea.lookup(".text");
+                    double lineHeight = t.getBoundsInLocal().getHeight();
+                    int totalNumberOfLines = textArea.getParagraphs().size();
+                    double scrollContentHeight = totalNumberOfLines*lineHeight;
+                    double deltaY =  deltaY_Thumb * (scrollContentHeight / scrollPane_parent.getHeight());
+
+                    if (scrollPane.isHover()) {
+                        scrollPane.scrollYBy(deltaY);
+                    }
+                }
 
             //----- Simple flick
-            } else if (m.getActionType().equals("Flick")){
-                if(m.getActionName().equals("deltaY")) {
+            } else if (m.getActionType().equals("Flick")) {
+                if (m.getActionName().equals("deltaY")) {
                     double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                    if(scrollPane.isHover()){scrollPane.scrollYBy(deltaY);}
+                    if (scrollPane.isHover()) {
+                        scrollPane.scrollYBy(deltaY);
+                    }
 
-                }else if(m.getActionName().equals("speed")){
+                } else if (m.getActionName().equals("speed")) {
                     double pxPerMs = Double.parseDouble(m.getValue());
                     scrollThread = new Thread(new ScrollThread(1, pxPerMs));
                     scrollThread.start();
 
-                }else if(m.getActionName().equals("stop")){
+                } else if (m.getActionName().equals("stop")) {
                     scrollThread.interrupt();
                 }
 
 
-            //----- Circle
+                //----- Circle
             } else if (m.getActionType().equals("Circle3")) {
                 if (m.getActionName().equals("deltaAngle")) {
                     double deltaY = Double.parseDouble(m.getValue());
@@ -337,8 +366,8 @@ public class RichTextViewController extends Controller {
                 }
 
 
-            //----- Rate-Based
-            } else if (m.getActionType().equals("TrackPoint")){
+                //----- Rate-Based
+            } else if (m.getActionType().equals("TrackPoint")) {
                 if (m.getActionName().equals("deltaY")) {
 
                     //stop old thread
@@ -358,26 +387,34 @@ public class RichTextViewController extends Controller {
                     int factorA = 100;
                     int factorB = 10;
 
-                    double speedVal =  deltaY/factorA;
-                    if(Math.abs(speedVal) >= 1){
+                    double speedVal = deltaY / factorA;
+                    if (Math.abs(speedVal) >= 1) {
                         ms = 1;
                         px = speedVal;
 
-                    }else{
-                        if(speedVal >= 0){
+                    } else {
+                        if (speedVal >= 0) {
                             px = 1;
-                        }else{
+                        } else {
                             px = -1;
                         }
 
-                        ms = (int) (factorB/Math.abs(speedVal)); //too make it slower /10
+                        ms = (int) (factorB / Math.abs(speedVal)); //too make it slower /10
                     }
-                    System.out.println( px + "/" + ms + " px/ms");
+                    System.out.println(px + "/" + ms + " px/ms");
                     scrollThread = new Thread(new ScrollThread(ms, px));
                     scrollThread.start();
 
                 } else if (m.getActionName().equals("stop")) {
                     scrollThread.interrupt();
+                }
+
+
+                // SCROLL WHEEL
+            }  else if (m.getActionType().equals("ScrollWheel")) {
+                if (m.getActionName().equals("deltaNotches")) {
+                    int deltaNotches = Integer.parseInt(m.getValue()); //should be a px value
+                    robot.mouseWheel(deltaNotches); //unit of scrolls = "notches of the wheel"
                 }
             }
 

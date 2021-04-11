@@ -138,12 +138,22 @@ public class ScrollViewController extends Controller {
         if(mode.equals(m.getActionType())) {
 
             //----- Normal Drag
-            if (m.getActionType().equals("Scroll")){
+            if (m.getActionType().equals("Scroll")|| m.getActionType().equals("Rubbing") ||  m.getActionType().equals("Drag") ){
                 if(m.getActionName().equals("deltaY")) {
                     double deltaY = Double.parseDouble(m.getValue()); //should be a px value
                     if(scrollPane.isHover()){ verticalScrollByPx(scrollPane, scrollContent, deltaY);}
                 }
 
+                // Dragging the thumb
+            } else if (m.getActionType().equals("Thumb")) {
+                if (m.getActionName().equals("deltaY")) {
+                    double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
+                    System.out.println(" Relation = " + (scrollContent.getHeight() / scrollPane.getHeight()));
+                    double deltaY = deltaY_Thumb * (scrollContent.getHeight() / scrollPane.getHeight());
+                    if (scrollPane.isHover()) {
+                        verticalScrollByPx(scrollPane, scrollContent, deltaY);
+                    }
+                }
 
             //----- Simple flick
             } else if (m.getActionType().equals("Flick")){
@@ -213,8 +223,14 @@ public class ScrollViewController extends Controller {
                 } else if (m.getActionName().equals("stop")) {
                     scrollThread.interrupt();
                 }
-            }
 
+            // SCROLL WHEEL
+            }else if (m.getActionType().equals("ScrollWheel")) {
+                if (m.getActionName().equals("deltaNotches")) {
+                    int deltaNotches = Integer.parseInt(m.getValue()); //should be a px value
+                    robot.mouseWheel(deltaNotches); //unit of scrolls = "notches of the wheel"
+                }
+            }
         }else if(m.getActionType().equals("Action")){
             if (m.getActionName().equals("click")) {
                 robot.mousePress(16);

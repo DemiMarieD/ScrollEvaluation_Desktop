@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.AnchorPane;
 
 import java.io.IOException;
@@ -30,7 +31,8 @@ public class ConnectMooseController extends Controller {
 
     //Variables
 
-    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK, ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING};
+    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK, ScrollingMode.RATE_BASED,
+            ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null, ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB};
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -48,7 +50,7 @@ public class ConnectMooseController extends Controller {
 
     public void setLayout(Boolean connected){
         cb.setItems(FXCollections.observableArrayList(
-                "Drag", "Flick", "Rate-Based", "Circle", "Rubbing")
+                "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", new Separator(), "Wheel", "real Drag", "Thumb")
         ); //new Separator(), can also be added
 
         if(connected){
