@@ -149,7 +149,7 @@ public class ScrollViewController extends Controller {
                 if (m.getActionName().equals("deltaY")) {
                     double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
                     System.out.println(" Relation = " + (scrollContent.getHeight() / scrollPane.getHeight()));
-                    double deltaY = deltaY_Thumb * (scrollContent.getHeight() / scrollPane.getHeight());
+                    double deltaY = (deltaY_Thumb/ scrollPane.getHeight()) * scrollContent.getHeight() ;
                     if (scrollPane.isHover()) {
                         verticalScrollByPx(scrollPane, scrollContent, deltaY);
                     }

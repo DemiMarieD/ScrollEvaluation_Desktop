@@ -30,12 +30,6 @@
                 <Separator layoutX="16.0" layoutY="11.0" prefHeight="3.0" prefWidth="558.0" />
             </children>
         </AnchorPane>
-      <AnchorPane fx:id="ScrollMode_pane" layoutX="179.0" layoutY="393.0" prefHeight="106.0" prefWidth="558.0">
-         <children>
-              <ComboBox fx:id="cb" layoutX="283.0" layoutY="34.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
-            <Label layoutX="40.0" layoutY="40.0" prefHeight="27.0" prefWidth="229.0" text="Select scrolling mode:" />
-         </children>
-      </AnchorPane>
       <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="182.0" text="&lt; Back" />
       <Button fx:id="nextBtn" layoutX="618.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="210.0" text="Next" />
     </children>

@@ -12,23 +12,22 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.Selection;
 
 import java.awt.*;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.IntFunction;
 
 public class RichTextViewController extends Controller {
@@ -36,10 +35,6 @@ public class RichTextViewController extends Controller {
 
     @FXML
     private ComboBox cb;
-    @FXML
-    private TextField frameInput;
-    @FXML
-    private TextField targetInput;
 
     @FXML
     private Pane topPane;
@@ -50,27 +45,36 @@ public class RichTextViewController extends Controller {
     @FXML
     private ScrollPane scrollPane_parent;
     private VirtualizedScrollPane<InlineCssTextArea> scrollPane;
-
     private InlineCssTextArea textArea;
-    private final VBox scrollContent = new VBox();
+
+    //For Framing Task
+    private double frameSize; // px
+    private int targetIndex;
+    private int targetNumber;
+    private int distance; //in number of lines
+    private final ArrayList<Integer> Distances =  new ArrayList<Integer>(Arrays.asList(6, 24, 96, 192));  //in number of lines
+    private final ArrayList<Integer> FrameSizes = new ArrayList<Integer>(Arrays.asList(6, 18)); //in number of lines
 
     // For Moose Scrolling
     private Thread scrollThread;
     private Robot robot;
 
-    private int frameSize_mm = 30; // mm
-    private int targetIndex = 41; // starts at 0
 
-    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK,
+
+    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.FLICK,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
-            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB};
+            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB));
+
+    private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
+            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
         super.initData(communicator, data);
         if(getData().getDevice() == Device.MOOSE){
             getCommunicator().changeController(this); //to receive Messages
-            getCommunicator().sendMessage(new Message("Server", "Mode", getData().getMode().getValue()).makeMessage());
+            String item = list.get(modes.indexOf(data.getMode()));
+            cb.setValue(item);
         }
 
         // Robot is used for click actions with Moose
@@ -82,14 +86,12 @@ public class RichTextViewController extends Controller {
 
         //Set mode depending on selection
         if(data.getDevice() == Device.MOOSE) {
-            cb.setItems(FXCollections.observableArrayList(
-                    "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", new Separator(), "Wheel", "Drag 2", "Thumb")
-            );
+            cb.setItems(FXCollections.observableArrayList(list));
             cb.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
                 @Override
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                    data.setMode(modes[newValue.intValue()]);
-                    String m = modes[newValue.intValue()].getValue();
+                    data.setMode(modes.get(newValue.intValue()));
+                    String m = modes.get(newValue.intValue()).getValue();
                     getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", m).makeMessage());
                 }
             });
@@ -104,7 +106,7 @@ public class RichTextViewController extends Controller {
         });
 
         setUpScrollPane();
-
+        targetNumber = 0;
         Platform.runLater(() -> {
             setUpPanesAndTarget();
             scrollPane.scrollYToPixel(0);
@@ -140,7 +142,17 @@ public class RichTextViewController extends Controller {
                 textArea.insertText(endOfLine, "\n");
                 //delete space " " that would otherwise be now at the beginning of the new line
                 textArea.deleteText(endOfLine+1, endOfLine+2);
+
+           //remove empty lines
+            }else if(textArea.getParagraphLinesCount(i) == 1){
+                textArea.moveTo(i, 0);
+                int positionsUntilEndOfLine = textArea.getCurrentLineEndInParargraph();
+                if(positionsUntilEndOfLine != 0){
+                    int endOfLine = textArea.getAbsolutePosition(i, 0) + positionsUntilEndOfLine;
+                    textArea.deleteText(endOfLine, endOfLine+1);
+                }
             }
+
         }
 
 
@@ -150,7 +162,6 @@ public class RichTextViewController extends Controller {
         double topMarginScrollPane = (mainPaneHeight - scrollPane_parent.getHeight()) / 2;
         scrollPane_parent.setLayoutY(topMarginScrollPane);
         //Center Frame in Y
-        updateFrame();
         frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
         //
         indicator.setLayoutX(scrollPane_parent.getBoundsInParent().getMaxX() - scrollBarWidth );
@@ -177,49 +188,103 @@ public class RichTextViewController extends Controller {
         textArea.setPadding(new Insets(0,0,0,0));
     }
 
-    public void setTargetFrame(ActionEvent actionEvent) {
-        int l = textArea.getParagraphLength(targetIndex);
-        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
 
-        targetIndex = Integer.parseInt(targetInput.getText());
-        frameSize_mm = Integer.parseInt(frameInput.getText());
-
-        setTarget();
-        updateFrame();
-    }
-
-
+    //Updates Target Highlight, Indicator position and Frame size + Colors
     public void setTarget() {
-        //highlight target
-        int l = textArea.getParagraphLength(targetIndex);
-        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+        //** Set Target
+        targetNumber++;
+        Random random = new Random();
 
-        /*
-        todo
-        indicator.setPrefHeight();
-        indicator.setLayoutY();
-         */
+        // first target random ?!
+        if(targetNumber == 1){
+            int totalNumberOfLines = textArea.getParagraphs().size();
+            System.out.println("Total Lines: " + totalNumberOfLines);
 
-        //Set Target indicator
+            //!! minus lines that can be reached outside the smallest frame
+            Text t = (Text) textArea.lookup(".text");
+            double lineHeight = t.getBoundsInLocal().getHeight();
+            long visibleLines = Math.round(textArea.getHeight() / lineHeight);
+            System.out.println("Visible Lines: " + visibleLines);
+            //assuming the lists are ordered by size!
+            int maxFramesize = FrameSizes.get(FrameSizes.size()-1);
+            int nonReachableLines = (int) (visibleLines - maxFramesize);
+            int maxDistance = Distances.get(Distances.size()-1);
+            int min = nonReachableLines/2 + maxDistance;
+            int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
+            targetIndex = min + random.nextInt(max-min);
+
+           // targetIndex = random.nextInt(totalNumberOfLines);
+
+            //highlight target
+            int l = textArea.getParagraphLength(targetIndex);
+            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+
+            //random frame size
+            frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
+            updateFrameHeight();
+
+            frame.setStyle("-fx-background-color: red");
+            indicator.setStyle("-fx-background-color: #efc8c8");
+
+
+        // second (and all other even trials) UP a random distance
+        } else if(targetNumber % 2 == 0) {
+           //set NEW distance
+            distance = Distances.get(random.nextInt(Distances.size()));
+
+            //scroll UP
+            targetIndex = targetIndex-distance;
+
+            //highlight target
+            int l = textArea.getParagraphLength(targetIndex);
+            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: blue;");
+
+            frame.setStyle("-fx-background-color: blue");
+            indicator.setStyle("-fx-background-color: #c0c0f1");
+
+
+        //third (and all other uneven trials) DOWN the same distance BUT Update framesize
+        }else{
+            //scroll DOWN
+            targetIndex = targetIndex+distance;
+
+            //highlight target
+            int l = textArea.getParagraphLength(targetIndex);
+            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+
+            //new random frame size
+            frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
+            updateFrameHeight();
+
+            frame.setStyle("-fx-background-color: red");
+            indicator.setStyle("-fx-background-color: #efc8c8");
+        }
+
+
+        //** Set Target indicator
         double centerP = textArea.getAbsolutePosition(targetIndex,textArea.getParagraphLength(targetIndex)/2);
         double relativePos =  (centerP + (scrollPane_parent.getHeight()/2) ) / textArea.getLength();
 
-        // indicator.setPrefHeight();
+        //todo indicator.setPrefHeight();
 
-        //makes line in bottom of screen
         double yPos =  (scrollPane_parent.getBoundsInParent().getMinY()) + (scrollPane_parent.getHeight() * relativePos);
         System.out.println(yPos);
         indicator.setLayoutY(yPos);
 
     }
 
-    public void updateFrame(){
-       double frameSize_px = toPx(frameSize_mm);
+    public void updateFrameHeight(){
+        Text t = (Text) textArea.lookup(".text");
+        double lineHeight = t.getBoundsInLocal().getHeight();
+        double frameSize_px = frameSize * lineHeight;
+
+      // double frameSize_px = toPx(frameSize);
        frame.setPrefHeight(frameSize_px);
 
        double mainPaneHeight = getMainPane().getHeight();
        double topMarginFrame = (mainPaneHeight - frameSize_px) / 2;
        frame.setLayoutY(topMarginFrame);
+
     }
 
     public void checkTarget(){
@@ -238,7 +303,7 @@ public class RichTextViewController extends Controller {
                 alert.showAndWait();
 
             }else{
-                Alert alert = new Alert(Alert.AlertType.ERROR, "FALSE", ButtonType.OK);
+                Alert alert = new Alert(Alert.AlertType.ERROR, "", ButtonType.OK);
                 alert.showAndWait();
             }
 
@@ -246,6 +311,11 @@ public class RichTextViewController extends Controller {
             Alert alert = new Alert(Alert.AlertType.ERROR, "", ButtonType.OK);
             alert.showAndWait();
         }
+
+        //remove old target and set new one
+        int l = textArea.getParagraphLength(targetIndex);
+        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
+        setTarget();
     }
 
     public void print(ActionEvent actionEvent) {
@@ -331,7 +401,17 @@ public class RichTextViewController extends Controller {
                     double lineHeight = t.getBoundsInLocal().getHeight();
                     int totalNumberOfLines = textArea.getParagraphs().size();
                     double scrollContentHeight = totalNumberOfLines*lineHeight;
-                    double deltaY =  deltaY_Thumb * (scrollContentHeight / scrollPane_parent.getHeight());
+
+                    // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
+                    // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
+                    // Paging = Block Increment/Decrement
+
+                    ScrollBar scrollBar = (ScrollBar) scrollPane.lookup(".scroll-bar:vertical");
+                    double visibleAmount = scrollBar.getVisibleAmount(); //size of page px
+                    //System.out.println("Visible Amount " + visibleAmount);
+                    //System.out.println("Height of Pane " + scrollPane.getHeight());
+
+                    double deltaY =  (deltaY_Thumb/visibleAmount) * scrollContentHeight; //scrollPane_parent.getHeight()
 
                     if (scrollPane.isHover()) {
                         scrollPane.scrollYBy(deltaY);

@@ -18,10 +18,8 @@ public class ConnectMooseController extends Controller {
     private  AnchorPane ConnectSuccess_Pane;
     @FXML
     private  AnchorPane ConnectInfo_Pane;
-    @FXML
-    private AnchorPane ScrollMode_pane;
-    @FXML
-    private ComboBox cb;
+
+
     @FXML
     private  Label label_ip;
     @FXML
@@ -29,10 +27,6 @@ public class ConnectMooseController extends Controller {
     @FXML
     private Button nextBtn;
 
-    //Variables
-
-    private ScrollingMode [] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK, ScrollingMode.RATE_BASED,
-            ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null, ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB};
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -49,19 +43,14 @@ public class ConnectMooseController extends Controller {
     }
 
     public void setLayout(Boolean connected){
-        cb.setItems(FXCollections.observableArrayList(
-                "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", new Separator(), "Wheel", "real Drag", "Thumb")
-        ); //new Separator(), can also be added
 
         if(connected){
             ConnectInfo_Pane.setVisible(false);
             ConnectSuccess_Pane.setVisible(true);
-            ScrollMode_pane.setVisible(true);
             nextBtn.setVisible(true);
         }else{
             ConnectInfo_Pane.setVisible(true);
             ConnectSuccess_Pane.setVisible(false);
-            ScrollMode_pane.setVisible(false);
             nextBtn.setVisible(false);
         }
     }
@@ -81,11 +70,6 @@ public class ConnectMooseController extends Controller {
     public void clickedNext(ActionEvent actionEvent) throws IOException {
         //Inform Client/Moose
         getCommunicator().sendMessage(new Message("Server", "Next", "Connected").makeMessage());
-
-        int selectedIndex = cb.getSelectionModel().getSelectedIndex();
-        //todo check index and give error on missing selection !
-        getData().setMode(modes[selectedIndex]);
-       // getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", getData().getMode().getValue()).makeMessage());
 
         goToView("Experiment_StartView.fxml");
     }
