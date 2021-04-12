@@ -163,9 +163,16 @@ public class RichTextViewController extends Controller {
         scrollPane_parent.setLayoutY(topMarginScrollPane);
         //Center Frame in Y
         frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
-        //
+        //Position Indicator
         indicator.setLayoutX(scrollPane_parent.getBoundsInParent().getMaxX() - scrollBarWidth );
-        indicator.setLayoutY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() / 2));
+       // indicator.setLayoutY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() / 2));
+        Text t = (Text) textArea.lookup(".text");
+        double lineHeight = t.getBoundsInLocal().getHeight();
+        int totalNumberOfLines = textArea.getParagraphs().size();
+        double scrollContentHeight = totalNumberOfLines*lineHeight;
+        double indicatorHeight = scrollContentHeight/scrollPane_parent.getHeight();
+        indicator.setPrefHeight(indicatorHeight);
+
 
         Platform.runLater(() -> {
             addLineNumbers();
@@ -206,8 +213,8 @@ public class RichTextViewController extends Controller {
             long visibleLines = Math.round(textArea.getHeight() / lineHeight);
             System.out.println("Visible Lines: " + visibleLines);
             //assuming the lists are ordered by size!
-            int maxFramesize = FrameSizes.get(FrameSizes.size()-1);
-            int nonReachableLines = (int) (visibleLines - maxFramesize);
+            int minFramesize = FrameSizes.get(0);
+            int nonReachableLines = (int) (visibleLines - minFramesize);
             int maxDistance = Distances.get(Distances.size()-1);
             int min = nonReachableLines/2 + maxDistance;
             int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
@@ -262,14 +269,16 @@ public class RichTextViewController extends Controller {
 
 
         //** Set Target indicator
-        double centerP = textArea.getAbsolutePosition(targetIndex,textArea.getParagraphLength(targetIndex)/2);
-        double relativePos =  (centerP + (scrollPane_parent.getHeight()/2) ) / textArea.getLength();
+        double minY = scrollPane_parent.getBoundsInParent().getMinY();
+        double relativeIndex = (double) targetIndex / textArea.getParagraphs().size();
+        double distanceToTop = scrollPane.getHeight() * relativeIndex;
+        double centerPosition = minY + distanceToTop;
+        double yPos = centerPosition - (indicator.getHeight()/2) + 1; //+1px boarder
 
-        //todo indicator.setPrefHeight();
+        double maxY = scrollPane_parent.getBoundsInParent().getMaxY() - indicator.getHeight();
 
-        double yPos =  (scrollPane_parent.getBoundsInParent().getMinY()) + (scrollPane_parent.getHeight() * relativePos);
-        System.out.println(yPos);
-        indicator.setLayoutY(yPos);
+        double validY = Math.max(Math.min(yPos, maxY), minY);
+        indicator.setLayoutY(validY);
 
     }
 

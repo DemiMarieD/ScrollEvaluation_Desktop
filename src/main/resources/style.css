@@ -17,5 +17,15 @@
 }
 
 .scrollArea .scroll-bar:vertical .decrement-button{
+    -fx-pref-height: 0px;
+}
+.scrollArea .scroll-bar:vertical .increment-button{
+    -fx-pref-height: 0px;
+}
 
+.scrollArea .scroll-bar:vertical .decrement-arrow {
+    visibility: hidden !important;
+}
+.scrollArea .scroll-bar:vertical .increment-arrow {
+    visibility: hidden !important;
 }
