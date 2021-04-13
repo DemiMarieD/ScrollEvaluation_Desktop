@@ -8,16 +8,17 @@ import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -25,14 +26,17 @@ import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.IntFunction;
 
-public class RichTextViewController extends Controller {
+public class HyperlinkViewController extends Controller {
     final int scrollBarWidth = 20; //px
 
     @FXML
@@ -40,8 +44,7 @@ public class RichTextViewController extends Controller {
 
     @FXML
     private Pane topPane;
-    @FXML
-    private Pane indicator;
+
     @FXML
     private  Pane frame;
     @FXML
@@ -52,8 +55,6 @@ public class RichTextViewController extends Controller {
     //For Framing Task
     private double frameSize; // px
     private int targetIndex;
-    private int targetNumber;
-    private int distance; //in number of lines
     private final ArrayList<Integer> Distances =  new ArrayList<Integer>(Arrays.asList(6, 24, 96, 192));  //in number of lines
     private final ArrayList<Integer> FrameSizes = new ArrayList<Integer>(Arrays.asList(6, 18)); //in number of lines
 
@@ -97,7 +98,7 @@ public class RichTextViewController extends Controller {
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     data.setMode(modes.get(newValue.intValue()));
                     String m = modes.get(newValue.intValue()).getValue();
-                    getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", m).makeMessage());
+                    getCommunicator().sendMessage(new Message("Server", "Mode", m).makeMessage());
                 }
             });
         }else{
@@ -115,7 +116,7 @@ public class RichTextViewController extends Controller {
         rightPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/success.wav").toURI().toString()));
 
         setUpScrollPane();
-        targetNumber = 0;
+
         Platform.runLater(() -> {
             setUpPanesAndTarget();
         });
@@ -136,8 +137,6 @@ public class RichTextViewController extends Controller {
         scrollPane_parent.setFitToHeight(true);
         scrollPane_parent.getStyleClass().add("scrollArea");
 
-        indicator.setPrefHeight(20);
-        indicator.setPrefWidth(scrollBarWidth-2);
     }
 
     public void setUpPanesAndTarget(){
@@ -171,21 +170,13 @@ public class RichTextViewController extends Controller {
         scrollPane_parent.setLayoutY(topMarginScrollPane);
         //Center Frame in Y
         frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
-        //Position Indicator
-        indicator.setLayoutX(scrollPane_parent.getBoundsInParent().getMaxX() - scrollBarWidth );
-       // indicator.setLayoutY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() / 2));
-        Text t = (Text) textArea.lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
-        int totalNumberOfLines = textArea.getParagraphs().size();
-        double scrollContentHeight = totalNumberOfLines*lineHeight;
-        double indicatorHeight = scrollContentHeight/scrollPane_parent.getHeight();
-        indicator.setPrefHeight(indicatorHeight);
+
 
 
         Platform.runLater(() -> {
             addLineNumbers();
             setTarget();
-            scrollPane.scrollYToPixel(0);
+
             topPane.setVisible(false);
         });
     }
@@ -208,86 +199,47 @@ public class RichTextViewController extends Controller {
     //Updates Target Highlight, Indicator position and Frame size + Colors
     public void setTarget() {
         //** Set Target
-        targetNumber++;
         Random random = new Random();
+        int totalNumberOfLines = textArea.getParagraphs().size();
 
-        // first target random ?!
-        if(targetNumber == 1){
-            int totalNumberOfLines = textArea.getParagraphs().size();
-            System.out.println("Total Lines: " + totalNumberOfLines);
-
-            //!! minus lines that can be reached outside the smallest frame
+        int startTop = random.nextInt(2);
+        System.out.println("Start " + startTop);
+        if(startTop==1){
+            scrollPane.scrollYToPixel(0);
+        }else{
             Text t = (Text) textArea.lookup(".text");
             double lineHeight = t.getBoundsInLocal().getHeight();
-            long visibleLines = Math.round(textArea.getHeight() / lineHeight);
-            System.out.println("Visible Lines: " + visibleLines);
-            //assuming the lists are ordered by size!
-            int minFramesize = FrameSizes.get(0);
-            int nonReachableLines = (int) (visibleLines - minFramesize);
-            int maxDistance = Distances.get(Distances.size()-1);
-            int min = nonReachableLines/2 + maxDistance;
-            int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
-            targetIndex = min + random.nextInt(max-min);
-
-           // targetIndex = random.nextInt(totalNumberOfLines);
-
-            //highlight target
-            int l = textArea.getParagraphLength(targetIndex);
-            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
-
-            //random frame size
-            frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
-            updateFrameHeight();
-
-            frame.setStyle("-fx-background-color: red");
-            indicator.setStyle("-fx-background-color: #efc8c8");
-
-
-        // second (and all other even trials) UP a random distance
-        } else if(targetNumber % 2 == 0) {
-           //set NEW distance
-            distance = Distances.get(random.nextInt(Distances.size()));
-
-            //scroll UP
-            targetIndex = targetIndex-distance;
-
-            //highlight target
-            int l = textArea.getParagraphLength(targetIndex);
-            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: blue;");
-
-            frame.setStyle("-fx-background-color: blue");
-            indicator.setStyle("-fx-background-color: #c0c0f1");
-
-
-        //third (and all other uneven trials) DOWN the same distance BUT Update framesize
-        }else{
-            //scroll DOWN
-            targetIndex = targetIndex+distance;
-
-            //highlight target
-            int l = textArea.getParagraphLength(targetIndex);
-            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
-
-            //new random frame size
-            frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
-            updateFrameHeight();
-
-            frame.setStyle("-fx-background-color: red");
-            indicator.setStyle("-fx-background-color: #efc8c8");
+            scrollPane.scrollYToPixel(lineHeight*totalNumberOfLines);
         }
 
 
-        //** Set Target indicator
-        double minY = scrollPane_parent.getBoundsInParent().getMinY();
-        double relativeIndex = (double) targetIndex / textArea.getParagraphs().size();
-        double distanceToTop = scrollPane.getHeight() * relativeIndex;
-        double centerPosition = minY + distanceToTop;
-        double yPos = centerPosition - (indicator.getHeight()/2) + 1; //+1px boarder
+        //!! minus lines that can be reached outside the smallest frame
+        Text t = (Text) textArea.lookup(".text");
+        double lineHeight = t.getBoundsInLocal().getHeight();
+        long visibleLines = Math.round(textArea.getHeight() / lineHeight);
+        System.out.println("Visible Lines: " + visibleLines);
+        //assuming the lists are ordered by size!
+        int minFramesize = FrameSizes.get(0);
+        int nonReachableLines = (int) (visibleLines - minFramesize);
+        int maxDistance = Distances.get(Distances.size()-1);
+        int min = nonReachableLines/2 + maxDistance;
+        int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
 
-        double maxY = scrollPane_parent.getBoundsInParent().getMaxY() - indicator.getHeight();
+        targetIndex = min + random.nextInt(max-min);
 
-        double validY = Math.max(Math.min(yPos, maxY), minY);
-        indicator.setLayoutY(validY);
+       // targetIndex = random.nextInt(totalNumberOfLines);
+
+        //highlight target
+        int l = textArea.getParagraphLength(targetIndex);
+        int start = textArea.getAbsolutePosition(targetIndex, 0);
+        System.out.println("Target "+ targetIndex);
+        textArea.setStyle(targetIndex, 0, l,  "-fx-fill: blue; -fx-underline: true;");
+
+        //random frame size
+        frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
+        updateFrameHeight();
+
+        frame.setStyle("-fx-background-color: blue");
 
     }
 
@@ -328,7 +280,6 @@ public class RichTextViewController extends Controller {
         }else{
             wrongPlayer.play();
         }
-
 
         //remove old target and set new one
         int l = textArea.getParagraphLength(targetIndex);
@@ -558,6 +509,33 @@ public class RichTextViewController extends Controller {
             }
         }
 
+    }
+
+
+    // ----------------------- Hyperlinks ---------------------------------------
+    static class HyperlinkStyle {
+        static final HyperlinkStyle NO_LINK = new HyperlinkStyle();
+
+        private final String url;
+
+        private HyperlinkStyle() {
+            this(null);
+        }
+
+        HyperlinkStyle(String url) {
+            this.url = url;
+        }
+
+        void applyToText(Text text) {
+            if(url != null) {
+                text.setCursor(Cursor.HAND);
+                text.setFill(Color.BLUE);
+                text.setUnderline(true);
+                text.setOnMouseClicked(click -> {
+                    System.out.println("Go to " + url);
+                });
+            }
+        }
     }
 
 

@@ -35,6 +35,18 @@ public class ExperimentController extends Controller {
 
     }
 
+
+    public void clickedHyperlink(ActionEvent actionEvent) throws IOException {
+        if(getData().getDevice() == Device.MOOSE) {
+            int selectedIndex = cb.getSelectionModel().getSelectedIndex();
+            //todo check index and give error on missing selection !
+            getData().setMode(modes[selectedIndex]);
+            getCommunicator().sendMessage(new Message("Server", "Mode", getData().getMode().getValue()).makeMessage());
+        }
+
+        goToView("HyperlinkView.fxml");
+    }
+
     public void clickedNext(ActionEvent actionEvent) throws IOException {
         if(getData().getDevice() == Device.MOOSE) {
             int selectedIndex = cb.getSelectionModel().getSelectedIndex();

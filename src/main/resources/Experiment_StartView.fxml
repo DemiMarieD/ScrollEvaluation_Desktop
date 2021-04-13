@@ -15,8 +15,9 @@
                 <Font size="32.0" />
             </font>
         </Label>
-        <Button layoutX="600.0" layoutY="470.0" mnemonicParsing="false" onAction="#clickedOther" prefHeight="39.0" prefWidth="200.0" text="Other" />
-        <Button layoutX="600.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="200.0" text="Reciprocal Framing task" />
+        <Button layoutX="600.0" layoutY="470.0" mnemonicParsing="false" onAction="#clickedHyperlink" prefHeight="39.0" prefWidth="200.0" text="Search (Framing task #2)" />
+        <Button layoutX="600.0" layoutY="425.0" mnemonicParsing="false" onAction="#clickedOther" prefHeight="39.0" prefWidth="200.0" text="Other" />
+        <Button layoutX="600.0" layoutY="515.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="200.0" text="Reciprocal Framing task" />
       <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="150.0" text="&lt; Back" />
       <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="259.0" layoutY="227.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
         <ComboBox fx:id="cb" layoutX="337.0" layoutY="267.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
