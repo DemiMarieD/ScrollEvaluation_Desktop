@@ -37,7 +37,10 @@ public class RichTextViewController extends Controller {
 
     @FXML
     private ComboBox cb;
-
+    @FXML
+    private TextField frameInput;
+    @FXML
+    private TextField distanceInput;
     @FXML
     private Pane topPane;
     @FXML
@@ -50,12 +53,14 @@ public class RichTextViewController extends Controller {
     private InlineCssTextArea textArea;
 
     //For Framing Task
-    private double frameSize; // px
+    private long startTime;
     private int targetIndex;
     private int targetNumber;
     private int distance; //in number of lines
-    private final ArrayList<Integer> Distances =  new ArrayList<Integer>(Arrays.asList(6, 24, 96, 192));  //in number of lines
-    private final ArrayList<Integer> FrameSizes = new ArrayList<Integer>(Arrays.asList(6, 18)); //in number of lines
+    private double frameSize; // in number of lines
+
+   // private final ArrayList<Integer> Distances =  new ArrayList<Integer>(Arrays.asList(6, 24, 96, 192));  //in number of lines
+   // private final ArrayList<Integer> FrameSizes = new ArrayList<Integer>(Arrays.asList(6, 18)); //in number of lines
 
     private MediaPlayer wrongPlayer;
     private MediaPlayer rightPlayer;
@@ -113,11 +118,16 @@ public class RichTextViewController extends Controller {
         //Media new File(path).toURI().toString()
         wrongPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/wrong.wav").toURI().toString()));
         rightPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/success.wav").toURI().toString()));
+        //default values
+        targetNumber = 0;
+        frameSize = 6;
+        distance = 60;
 
         setUpScrollPane();
-        targetNumber = 0;
+
         Platform.runLater(() -> {
             setUpPanesAndTarget();
+            scrollPane.requestFocus(); // so on space-bar hit no accidental button press
         });
     }
 
@@ -209,44 +219,27 @@ public class RichTextViewController extends Controller {
     public void setTarget() {
         //** Set Target
         targetNumber++;
-        Random random = new Random();
+        startTime = System.currentTimeMillis();
 
         // first target random ?!
         if(targetNumber == 1){
-            int totalNumberOfLines = textArea.getParagraphs().size();
-            System.out.println("Total Lines: " + totalNumberOfLines);
-
-            //!! minus lines that can be reached outside the smallest frame
-            Text t = (Text) textArea.lookup(".text");
-            double lineHeight = t.getBoundsInLocal().getHeight();
-            long visibleLines = Math.round(textArea.getHeight() / lineHeight);
-            System.out.println("Visible Lines: " + visibleLines);
-            //assuming the lists are ordered by size!
-            int minFramesize = FrameSizes.get(0);
-            int nonReachableLines = (int) (visibleLines - minFramesize);
-            int maxDistance = Distances.get(Distances.size()-1);
-            int min = nonReachableLines/2 + maxDistance;
-            int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
-            targetIndex = min + random.nextInt(max-min);
-
-           // targetIndex = random.nextInt(totalNumberOfLines);
+            targetIndex = getRandomValidTargetIndex();
 
             //highlight target
             int l = textArea.getParagraphLength(targetIndex);
             textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
 
             //random frame size
-            frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
+           // frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
             updateFrameHeight();
 
             frame.setStyle("-fx-background-color: red");
             indicator.setStyle("-fx-background-color: #efc8c8");
 
-
         // second (and all other even trials) UP a random distance
         } else if(targetNumber % 2 == 0) {
            //set NEW distance
-            distance = Distances.get(random.nextInt(Distances.size()));
+           //  distance = Distances.get(random.nextInt(Distances.size()));
 
             //scroll UP
             targetIndex = targetIndex-distance;
@@ -269,7 +262,7 @@ public class RichTextViewController extends Controller {
             textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
 
             //new random frame size
-            frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
+            //frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
             updateFrameHeight();
 
             frame.setStyle("-fx-background-color: red");
@@ -291,6 +284,28 @@ public class RichTextViewController extends Controller {
 
     }
 
+    private int getRandomValidTargetIndex() {
+        Random random = new Random();
+        int totalNumberOfLines = textArea.getParagraphs().size();
+
+        //!! minus lines that can be reached outside the smallest frame
+        Text t = (Text) textArea.lookup(".text");
+        double lineHeight = t.getBoundsInLocal().getHeight();
+        long visibleLines = Math.round(textArea.getHeight() / lineHeight);
+        System.out.println("Visible Lines: " + visibleLines);
+        //assuming the lists are ordered by size!
+        // int minFramesize = FrameSizes.get(0);
+        int minFramesize = (int) frameSize;
+        int nonReachableLines = (int) (visibleLines - minFramesize);
+        //  int maxDistance = Distances.get(Distances.size()-1);
+        int maxDistance = (int) distance;
+        int min = nonReachableLines/2 + maxDistance;
+        int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
+        targetIndex = min + random.nextInt(max-min);
+
+        return targetIndex;
+    }
+
     public void updateFrameHeight(){
         Text t = (Text) textArea.lookup(".text");
         double lineHeight = t.getBoundsInLocal().getHeight();
@@ -307,6 +322,9 @@ public class RichTextViewController extends Controller {
 
     public void checkTarget(){
         stopSounds();
+
+        long deltaTime = System.currentTimeMillis() - startTime;
+        System.out.println("-- Time of Phase "+ targetNumber +" = " + deltaTime);
 
         Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
         if(!bounds.isEmpty()) {
@@ -341,26 +359,18 @@ public class RichTextViewController extends Controller {
         wrongPlayer.stop();
     }
 
-    public void print(ActionEvent actionEvent) {
-        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
-        if(!bounds.isEmpty()) {
-            double lineY_min = bounds.get().getMinY();
-            double lineY_max = bounds.get().getMaxY();
-          // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
+    public void startTrial(ActionEvent actionEvent) {
+        targetNumber = 0; //restart phases
+        targetIndex = Integer.parseInt(distanceInput.getText());
+        frameSize = Integer.parseInt(frameInput.getText());
 
-            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
-            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
-          // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
+        System.out.println(" -------- NEW TRIAL -------- ");
+        scrollPane.requestFocus(); // so on space-bar hit no accidental button press
 
-            if(frameY_min < lineY_min && frameY_max > lineY_max){
-                System.out.println("IN FRAME !");
-            }
-        }
-        //System.out.println("Bounds*2 " + textArea.getVisibleParagraphBoundsOnScreen(40)); //index should be 0-number lines visible?!
-    }
-
-    public void clickedNext(ActionEvent actionEvent) throws IOException {
-        //goToView(".fxml");
+        //remove old target and set new one
+        int l = textArea.getParagraphLength(targetIndex);
+        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
+        setTarget();
     }
 
     public void clickedBack(ActionEvent actionEvent) throws IOException {
@@ -532,6 +542,7 @@ public class RichTextViewController extends Controller {
         }
 
     }
+
 
     // Continuous Scrolling
     public class ScrollThread implements Runnable{
