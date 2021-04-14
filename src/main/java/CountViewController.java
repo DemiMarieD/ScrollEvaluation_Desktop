@@ -10,8 +10,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -36,8 +37,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.IntFunction;
 
-public class HyperlinkViewController extends Controller {
-    final int scrollBarWidth = 20; //px
+public class CountViewController extends Controller {
 
     @FXML
     private ComboBox cb;
@@ -46,26 +46,16 @@ public class HyperlinkViewController extends Controller {
     private Pane topPane;
 
     @FXML
-    private  Pane frame;
-    @FXML
     private ScrollPane scrollPane_parent;
     private VirtualizedScrollPane<InlineCssTextArea> scrollPane;
     private InlineCssTextArea textArea;
 
-    //For Framing Task
-    private double frameSize; // px
-    private int targetIndex;
-    private final ArrayList<Integer> Distances =  new ArrayList<Integer>(Arrays.asList(6, 24, 96, 192));  //in number of lines
-    private final ArrayList<Integer> FrameSizes = new ArrayList<Integer>(Arrays.asList(6, 18)); //in number of lines
-
-    private MediaPlayer wrongPlayer;
-    private MediaPlayer rightPlayer;
+    //For Count Task
+    private int numberOfTargets;
 
     // For Moose Scrolling
     private Thread scrollThread;
     private Robot robot;
-
-
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.FLICK,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
@@ -104,16 +94,6 @@ public class HyperlinkViewController extends Controller {
         }else{
             cb.setVisible(false);
         }
-
-        getMainPane().addEventFilter(KeyEvent.KEY_PRESSED, event->{
-            if (event.getCode() == KeyCode.SPACE) {
-               checkTarget();
-            }
-        });
-
-        //Media new File(path).toURI().toString()
-        wrongPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/wrong.wav").toURI().toString()));
-        rightPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/success.wav").toURI().toString()));
 
         setUpScrollPane();
 
@@ -168,8 +148,6 @@ public class HyperlinkViewController extends Controller {
         //Center Scroll Pane in Y
         double topMarginScrollPane = (mainPaneHeight - scrollPane_parent.getHeight()) / 2;
         scrollPane_parent.setLayoutY(topMarginScrollPane);
-        //Center Frame in Y
-        frame.setLayoutX(scrollPane_parent.getBoundsInParent().getMinX()-frame.getWidth());
 
 
 
@@ -201,117 +179,25 @@ public class HyperlinkViewController extends Controller {
         //** Set Target
         Random random = new Random();
         int totalNumberOfLines = textArea.getParagraphs().size();
+        scrollPane.scrollYToPixel(0);
 
-        int startTop = random.nextInt(2);
-        System.out.println("Start " + startTop);
-        if(startTop==1){
-            scrollPane.scrollYToPixel(0);
-        }else{
-            Text t = (Text) textArea.lookup(".text");
-            double lineHeight = t.getBoundsInLocal().getHeight();
-            scrollPane.scrollYToPixel(lineHeight*totalNumberOfLines);
+        // random number of targets
+        numberOfTargets = random.nextInt(20);
+
+        //position targets random
+        int wordLength = 10;
+        for(int i=0; i <numberOfTargets; i++) {
+            int startPoint =  random.nextInt(textArea.getLength());
+            textArea.setStyle(startPoint, startPoint+wordLength,  "-fx-fill: blue; -fx-underline: true;");
+
+            //todo double check no overlap
         }
 
-
-        //!! minus lines that can be reached outside the smallest frame
-        Text t = (Text) textArea.lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
-        long visibleLines = Math.round(textArea.getHeight() / lineHeight);
-        System.out.println("Visible Lines: " + visibleLines);
-        //assuming the lists are ordered by size!
-        int minFramesize = FrameSizes.get(0);
-        int nonReachableLines = (int) (visibleLines - minFramesize);
-        int maxDistance = Distances.get(Distances.size()-1);
-        int min = nonReachableLines/2 + maxDistance;
-        int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
-
-        targetIndex = min + random.nextInt(max-min);
-
-       // targetIndex = random.nextInt(totalNumberOfLines);
-
-        //highlight target
-        int l = textArea.getParagraphLength(targetIndex);
-        int start = textArea.getAbsolutePosition(targetIndex, 0);
-        System.out.println("Target "+ targetIndex);
-        textArea.setStyle(targetIndex, 0, l,  "-fx-fill: blue; -fx-underline: true;");
-
-        //random frame size
-        frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
-        updateFrameHeight();
-
-        frame.setStyle("-fx-background-color: blue");
-
-    }
-
-    public void updateFrameHeight(){
-        Text t = (Text) textArea.lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
-        double frameSize_px = frameSize * lineHeight;
-
-      // double frameSize_px = toPx(frameSize);
-       frame.setPrefHeight(frameSize_px);
-
-       double mainPaneHeight = getMainPane().getHeight();
-       double topMarginFrame = (mainPaneHeight - frameSize_px) / 2;
-       frame.setLayoutY(topMarginFrame);
-
-    }
-
-    public void checkTarget(){
-        stopSounds();
-
-        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
-        if(!bounds.isEmpty()) {
-            double lineY_min = bounds.get().getMinY();
-            double lineY_max = bounds.get().getMaxY();
-            // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
-
-            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
-            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
-            // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
-
-            if(frameY_min < lineY_min && frameY_max > lineY_max){
-                rightPlayer.play();
-
-            }else{
-                wrongPlayer.play();
-            }
-
-        }else{
-            wrongPlayer.play();
-        }
-
-        //remove old target and set new one
-        int l = textArea.getParagraphLength(targetIndex);
-        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
-        setTarget();
-    }
-
-    public void stopSounds(){
-        rightPlayer.stop();
-        wrongPlayer.stop();
     }
 
     public void print(ActionEvent actionEvent) {
-        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
-        if(!bounds.isEmpty()) {
-            double lineY_min = bounds.get().getMinY();
-            double lineY_max = bounds.get().getMaxY();
-          // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
-
-            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
-            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
-          // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
-
-            if(frameY_min < lineY_min && frameY_max > lineY_max){
-                System.out.println("IN FRAME !");
-            }
-        }
-        //System.out.println("Bounds*2 " + textArea.getVisibleParagraphBoundsOnScreen(40)); //index should be 0-number lines visible?!
-    }
-
-    public void clickedNext(ActionEvent actionEvent) throws IOException {
-        //goToView(".fxml");
+        System.out.println("Number of Targets were : " + numberOfTargets);
+        setTarget();
     }
 
     public void clickedBack(ActionEvent actionEvent) throws IOException {
@@ -338,12 +224,7 @@ public class HyperlinkViewController extends Controller {
         return content;
     }
 
-    public double toPx(int mm){
-        // dpi = pixels/inch
-        double dpi = Screen.getPrimary().getDpi();
-        // mm  * pixels/inch * inch/mm
-        return (mm * dpi) / 25.4;
-    }
+
 
     // --------------------  Moose Scrolling ------------------------------------
 

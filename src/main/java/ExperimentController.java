@@ -67,7 +67,7 @@ public class ExperimentController extends Controller {
 
     }
 
-    public void clickedOther(ActionEvent actionEvent) throws IOException {
-        goToView("ScrollView.fxml");
+    public void clickedCount(ActionEvent actionEvent) throws IOException {
+        goToView("CountView.fxml");
     }
 }

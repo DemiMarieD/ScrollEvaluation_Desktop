@@ -406,7 +406,7 @@ public class RichTextViewController extends Controller {
 
     // --------------------  Moose Scrolling ------------------------------------
 
-    // Incoming Messages from Moose for scrolling
+    // Incoming Messages from Moose for scrolling -todo maybe in controller ?
     @Override
     public void incomingMessage(String message) {
         super.incomingMessage(message);
