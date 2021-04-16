@@ -73,10 +73,10 @@ public class RichTextViewController extends Controller {
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.FLICK,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
-            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB, ScrollingMode.MULTI_SCROLL));
+            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK, ScrollingMode.RATE_BASED_2));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb"));
+            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb", "Fast Flick", "Rate-based 2" ));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -458,6 +458,9 @@ public class RichTextViewController extends Controller {
 
                 } else if (m.getActionName().equals("speed")) {
                     double pxPerMs = Double.parseDouble(m.getValue());
+                    if(getData().getMode() == ScrollingMode.FAST_FLICK){
+                        pxPerMs = pxPerMs*1.3;
+                    }
                     scrollThread = new Thread(new ScrollThread(1, pxPerMs));
                     scrollThread.start();
 
@@ -485,36 +488,44 @@ public class RichTextViewController extends Controller {
                         scrollThread.interrupt();
                     }
 
-                    double deltaY = Double.parseDouble(m.getValue()); //val between 0 - 1
-                    int ms; //ms
-                    double px;
+                    double deltaY = Double.parseDouble(m.getValue()); //px
+                    if(getData().getMode() == ScrollingMode.RATE_BASED_2){
+                        //According to MultiScroll Paper
+                        double px = Math.pow(Math.abs(deltaY), 1.5) / 1000; //to get per sec ?!
+                        if(deltaY < 0) { px = px * -1; }
+                        scrollThread = new Thread(new ScrollThread(1, px));
+                        scrollThread.start();
 
-                    // 100px => 1px/1ms = '1';  200px => '2' = 2px/1ms; 50px => '0.5' = 1px/2ms; (factorA = 100, factorB = 1)
-                    // (factorB 1) 99 = 0.99 = 1/1ms; 10px => '0.1' = 1px/10ms  -> 10px too fast
-                    // (factorB 10) 99 = 0.99 = 1/10ms; 10px => '0.1' = 1px/100ms  -> jump from 99px to 100px
-                    // -> maybe adapt factorA
-                    // todo improve factors
-                    int factorA = 100;
-                    int factorB = 10;
+                    }else {
+                        int ms; //ms
+                        double px;
 
-                    double speedVal = deltaY / factorA;
-                    if (Math.abs(speedVal) >= 1) {
-                        ms = 1;
-                        px = speedVal;
+                        // 100px => 1px/1ms = '1';  200px => '2' = 2px/1ms; 50px => '0.5' = 1px/2ms; (factorA = 100, factorB = 1)
+                        // (factorB 1) 99 = 0.99 = 1/1ms; 10px => '0.1' = 1px/10ms  -> 10px too fast
+                        // (factorB 10) 99 = 0.99 = 1/10ms; 10px => '0.1' = 1px/100ms  -> jump from 99px to 100px
+                        // -> maybe adapt factorA
+                        // todo improve factors
+                        int factorA = 100;
+                        int factorB = 10;
 
-                    } else {
-                        if (speedVal >= 0) {
-                            px = 1;
+                        double speedVal = deltaY / factorA;
+                        if (Math.abs(speedVal) >= 1) {
+                            ms = 1;
+                            px = speedVal;
+
                         } else {
-                            px = -1;
+                            if (speedVal >= 0) {
+                                px = 1;
+                            } else {
+                                px = -1;
+                            }
+
+                            ms = (int) (factorB / Math.abs(speedVal)); //too make it slower /10
                         }
-
-                        ms = (int) (factorB / Math.abs(speedVal)); //too make it slower /10
+                        System.out.println(px + "/" + ms + " px/ms");
+                        scrollThread = new Thread(new ScrollThread(ms, px));
+                        scrollThread.start();
                     }
-                    System.out.println(px + "/" + ms + " px/ms");
-                    scrollThread = new Thread(new ScrollThread(ms, px));
-                    scrollThread.start();
-
                 } else if (m.getActionName().equals("stop")) {
                     scrollThread.interrupt();
                 }

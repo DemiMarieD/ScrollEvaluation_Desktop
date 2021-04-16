@@ -5,7 +5,8 @@ public enum ScrollingMode {
     //"Scroll", "ScrollWheel", "Flick", "Flick2", "Flick3", "Bar", "Paging", "Speed2", "ButtonHold", "TrackPoint", "Circle2", "Circle3"
 
     DRAG("Scroll"),  DRAG_2("Drag"), FLICK("Flick"), CIRCLE("Circle3"), RATE_BASED("TrackPoint"),
-    RUBBING("Rubbing"), WHEEL("ScrollWheel"), THUMB("Thumb"), MULTI_SCROLL("TwoFinger");
+    RUBBING("Rubbing"), WHEEL("ScrollWheel"), THUMB("Thumb"), MULTI_SCROLL("TwoFinger"),
+    FAST_FLICK("Flick"), RATE_BASED_2 ("TrackPoint");
 
     String value;
     ScrollingMode(String val){
