@@ -74,11 +74,7 @@ public class CountViewController extends Controller {
         }
 
         // Robot is used for click actions with Moose
-        try {
-            robot = new Robot();
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
+        robot = getRobot();
 
         //Set mode depending on selection
         if(data.getDevice() == Device.MOOSE) {

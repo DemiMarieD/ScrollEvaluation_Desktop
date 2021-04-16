@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -17,12 +18,18 @@ public class Controller {
 
     private Communicator communicator;
     private Data data;
+    private Robot robot;
 
     @FXML private Pane pane;
 
     public void initData(Communicator communicator, Data data) {
         this.communicator = communicator;
         this.data = data;
+        try {
+            this.robot = new Robot();
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onLoad(){
@@ -30,7 +37,15 @@ public class Controller {
 
     public void incomingMessage(String message) {
         System.out.println("-- NEW MESSAGE: " + message);
-        //to be overwritten
+        Message m = new Message(message);
+
+        if(m.getActionType().equals("Action")) {
+            if (m.getActionName().equals("click")) {
+                robot.mousePress(16);
+                robot.mouseRelease(16);
+
+            }
+        }
     }
 
     public void goToView(String fxml) throws IOException {
@@ -71,6 +86,10 @@ public class Controller {
 
     public Pane getMainPane(){
         return pane;
+    }
+
+    public Robot getRobot(){
+        return robot;
     }
 
 }
