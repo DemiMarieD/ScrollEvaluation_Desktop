@@ -8,6 +8,7 @@
     <children>
         <Button layoutX="760.0" layoutY="516.0" mnemonicParsing="false" onAction="#print" prefHeight="39.0" prefWidth="107.0" text="Print" />
         <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />
+         <Label fx:id="numTargetLabel" text="Targets: " layoutX="730.0" layoutY="450.0" />
         <ScrollPane fx:id="scrollPane_parent" layoutX="185.0" prefHeight="570.0" prefWidth="531.0" />
       <ComboBox fx:id="cb" layoutX="24.0" layoutY="31.0" prefWidth="150.0" promptText="Select Mode..." />
       <Pane fx:id="topPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: white;">

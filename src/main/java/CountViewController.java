@@ -11,6 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
@@ -39,6 +40,8 @@ import java.util.function.IntFunction;
 
 public class CountViewController extends Controller {
 
+    @FXML
+    private Label numTargetLabel;
     @FXML
     private ComboBox cb;
 
@@ -100,7 +103,7 @@ public class CountViewController extends Controller {
 
     public void setUpScrollPane(){
         textArea = new InlineCssTextArea();
-        textArea.appendText(getText("src/main/resources/files/loremIpsum.txt"));
+        textArea.appendText(getText("src/main/resources/files/loremIpsum_short.txt"));
         textArea.setWrapText(true);
         textArea.setEditable(false);
         //padding to leave room for line numbers
@@ -193,6 +196,7 @@ public class CountViewController extends Controller {
 
     public void print(ActionEvent actionEvent) {
         System.out.println("Number of Targets were : " + numberOfTargets);
+        numTargetLabel.setText("Number of Targets were: \n" + numberOfTargets);
         setTarget();
     }
 
