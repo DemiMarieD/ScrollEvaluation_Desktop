@@ -69,10 +69,10 @@ public class HyperlinkViewController extends Controller {
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.FLICK,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
-            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB));
+            ScrollingMode.WHEEL, ScrollingMode.DRAG_acceleration, ScrollingMode.THUMB));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb"));
+            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag Accel.", "Thumb"));
 
     @Override
     public void initData(Communicator communicator, Data data) {

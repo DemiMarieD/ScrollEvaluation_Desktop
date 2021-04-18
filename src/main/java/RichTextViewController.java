@@ -71,12 +71,12 @@ public class RichTextViewController extends Controller {
 
 
 
-    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.FLICK,
-            ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
-            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK));
+    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK,
+            ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
+            ScrollingMode.WHEEL, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb", "Fast Flick"));
+            "Drag", "Drag + Accel.", "Flick", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb", "Multi Flick"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -99,6 +99,7 @@ public class RichTextViewController extends Controller {
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     data.setMode(modes.get(newValue.intValue()));
                     String m = modes.get(newValue.intValue()).getValue();
+                    System.out.println("Setting mode: " + m);
                     getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", m).makeMessage());
                 }
             });
@@ -417,6 +418,7 @@ public class RichTextViewController extends Controller {
             switch (m.getActionType()) {
                 case "Scroll":
                 case "Rubbing":
+                case "DragAcceleration":
                 case "Drag":
                     if (m.getActionName().equals("deltaY")) {
                         double deltaY = Double.parseDouble(m.getValue()); //should be a px value

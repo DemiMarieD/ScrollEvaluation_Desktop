@@ -80,7 +80,7 @@ public class Communicator {
         public void run() {
             Socket socket;
             try {
-                serverSocket = new ServerSocket(SERVER_PORT);
+                serverSocket = new ServerSocket(SERVER_PORT);  // error: in use once connection is lost..
                 //Waiting for connection
                 //Run in Main Thread (change UI)
                 Runnable updater = () -> {
