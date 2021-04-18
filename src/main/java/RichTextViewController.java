@@ -73,10 +73,10 @@ public class RichTextViewController extends Controller {
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.FLICK,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null,
-            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK, ScrollingMode.RATE_BASED_2));
+            ScrollingMode.WHEEL, ScrollingMode.DRAG_2, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb", "Fast Flick", "Rate-based 2" ));
+            "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", "---------------", "Wheel", "Drag 2", "Thumb", "Fast Flick"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -414,129 +414,113 @@ public class RichTextViewController extends Controller {
         if(mode.equals(m.getActionType())) {
 
             //----- Normal Drag or Rubbing
-            if (m.getActionType().equals("Scroll") || m.getActionType().equals("Rubbing") ||  m.getActionType().equals("Drag")) {
-                if (m.getActionName().equals("deltaY")) {
-                    double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                    if (scrollPane.isHover()) {
-                        scrollPane.scrollYBy(deltaY);
-                    }
-                }
-
-            // Dragging the thumb
-            } else if (m.getActionType().equals("Thumb")) {
-                if (m.getActionName().equals("deltaY")) {
-                    double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
-
-                    Text t = (Text) textArea.lookup(".text");
-                    double lineHeight = t.getBoundsInLocal().getHeight();
-                    int totalNumberOfLines = textArea.getParagraphs().size();
-                    double scrollContentHeight = totalNumberOfLines*lineHeight;
-
-                    // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
-                    // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
-                    // Paging = Block Increment/Decrement
-
-                    ScrollBar scrollBar = (ScrollBar) scrollPane.lookup(".scroll-bar:vertical");
-                    double visibleAmount = scrollBar.getVisibleAmount(); //size of page px
-                    //System.out.println("Visible Amount " + visibleAmount);
-                    //System.out.println("Height of Pane " + scrollPane.getHeight());
-
-                    double deltaY =  (deltaY_Thumb/visibleAmount) * scrollContentHeight; //scrollPane_parent.getHeight()
-
-                    if (scrollPane.isHover()) {
-                        scrollPane.scrollYBy(deltaY);
-                    }
-                }
-
-            //----- Simple flick
-            } else if (m.getActionType().equals("Flick")) {
-                if (m.getActionName().equals("deltaY")) {
-                    double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                    if (scrollPane.isHover()) {
-                        scrollPane.scrollYBy(deltaY);
+            switch (m.getActionType()) {
+                case "Scroll":
+                case "Rubbing":
+                case "Drag":
+                    if (m.getActionName().equals("deltaY")) {
+                        double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+                        if (scrollPane.isHover()) {
+                            scrollPane.scrollYBy(deltaY);
+                        }
                     }
 
-                } else if (m.getActionName().equals("speed")) {
-                    double pxPerMs = Double.parseDouble(m.getValue());
-                    if(getData().getMode() == ScrollingMode.FAST_FLICK){
-                        pxPerMs = pxPerMs*1.3;
+
+                    break;
+
+                // Dragging the thumb
+                case "Thumb":
+                    if (m.getActionName().equals("deltaY")) {
+                        double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
+
+                        Text t = (Text) textArea.lookup(".text");
+                        double lineHeight = t.getBoundsInLocal().getHeight();
+                        int totalNumberOfLines = textArea.getParagraphs().size();
+                        double scrollContentHeight = totalNumberOfLines * lineHeight;
+
+                        // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
+                        // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
+                        // Paging = Block Increment/Decrement
+
+                        ScrollBar scrollBar = (ScrollBar) scrollPane.lookup(".scroll-bar:vertical");
+                        double visibleAmount = scrollBar.getVisibleAmount(); //size of page px
+                        //System.out.println("Visible Amount " + visibleAmount);
+                        //System.out.println("Height of Pane " + scrollPane.getHeight());
+
+                        double deltaY = (deltaY_Thumb / visibleAmount) * scrollContentHeight; //scrollPane_parent.getHeight()
+
+                        if (scrollPane.isHover()) {
+                            scrollPane.scrollYBy(deltaY);
+                        }
                     }
-                    scrollThread = new Thread(new ScrollThread(1, pxPerMs));
-                    scrollThread.start();
 
-                } else if (m.getActionName().equals("stop")) {
-                    scrollThread.interrupt();
-                }
+                    break;
 
+                //----- Simple flick
+                case "Flick":
+                    if (m.getActionName().equals("deltaY")) {
+                        double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+                        if (scrollPane.isHover()) {
+                            scrollPane.scrollYBy(deltaY);
+                        }
 
-                //----- Circle
-            } else if (m.getActionType().equals("Circle3")) {
-                if (m.getActionName().equals("deltaAngle")) {
-                    double deltaY = Double.parseDouble(m.getValue());
-                    if (scrollPane.isHover()) {
-                        scrollPane.scrollYBy(deltaY);
-                    }
-                }
+                    } else if (m.getActionName().equals("speed")) {
+                        double pxPerMs = Double.parseDouble(m.getValue());
+                        if (getData().getMode() == ScrollingMode.FAST_FLICK) {
+                            pxPerMs = pxPerMs * 1.3;
+                        }
+                        scrollThread = new Thread(new ScrollThread(1, pxPerMs));
+                        scrollThread.start();
 
-
-                //----- Rate-Based
-            } else if (m.getActionType().equals("TrackPoint")) {
-                if (m.getActionName().equals("deltaY")) {
-
-                    //stop old thread
-                    if (scrollPane.isHover() && scrollThread != null && !scrollThread.isInterrupted()) {
+                    } else if (m.getActionName().equals("stop")) {
                         scrollThread.interrupt();
                     }
 
-                    double deltaY = Double.parseDouble(m.getValue()); //px
-                    if(getData().getMode() == ScrollingMode.RATE_BASED_2){
-                        //According to MultiScroll Paper
-                        double px = Math.pow(Math.abs(deltaY), 1.5) / 1000; //to get per sec ?!
-                        if(deltaY < 0) { px = px * -1; }
-                        scrollThread = new Thread(new ScrollThread(1, px));
-                        scrollThread.start();
 
-                    }else {
-                        int ms; //ms
-                        double px;
 
-                        // 100px => 1px/1ms = '1';  200px => '2' = 2px/1ms; 50px => '0.5' = 1px/2ms; (factorA = 100, factorB = 1)
-                        // (factorB 1) 99 = 0.99 = 1/1ms; 10px => '0.1' = 1px/10ms  -> 10px too fast
-                        // (factorB 10) 99 = 0.99 = 1/10ms; 10px => '0.1' = 1px/100ms  -> jump from 99px to 100px
-                        // -> maybe adapt factorA
-                        // todo improve factors
-                        int factorA = 100;
-                        int factorB = 10;
+                    break;
 
-                        double speedVal = deltaY / factorA;
-                        if (Math.abs(speedVal) >= 1) {
-                            ms = 1;
-                            px = speedVal;
-
-                        } else {
-                            if (speedVal >= 0) {
-                                px = 1;
-                            } else {
-                                px = -1;
-                            }
-
-                            ms = (int) (factorB / Math.abs(speedVal)); //too make it slower /10
+                //----- Circle
+                case "Circle3":
+                    if (m.getActionName().equals("deltaAngle")) {
+                        double deltaY = Double.parseDouble(m.getValue());
+                        if (scrollPane.isHover()) {
+                            scrollPane.scrollYBy(deltaY);
                         }
-                        System.out.println(px + "/" + ms + " px/ms");
-                        scrollThread = new Thread(new ScrollThread(ms, px));
-                        scrollThread.start();
                     }
-                } else if (m.getActionName().equals("stop")) {
-                    scrollThread.interrupt();
-                }
 
+
+
+                    break;
+
+                //----- Rate-Based
+                case "TrackPoint":
+                    if (m.getActionName().equals("deltaY")) {
+
+                        //stop old thread
+                        if (scrollPane.isHover() && scrollThread != null && !scrollThread.isInterrupted()) {
+                            scrollThread.interrupt();
+                        }
+
+                        double deltaY = Double.parseDouble(m.getValue()); //px
+                        scrollThread = new Thread(new ScrollThread(1, deltaY));
+                        scrollThread.start();
+
+                    } else if (m.getActionName().equals("stop")) {
+                        scrollThread.interrupt();
+                    }
+
+
+
+                    break;
 
                 // SCROLL WHEEL
-            }  else if (m.getActionType().equals("ScrollWheel")) {
-                if (m.getActionName().equals("deltaNotches")) {
-                    int deltaNotches = Integer.parseInt(m.getValue()); //should be a px value
-                    robot.mouseWheel(deltaNotches); //unit of scrolls = "notches of the wheel"
-                }
+                case "ScrollWheel":
+                    if (m.getActionName().equals("deltaNotches")) {
+                        int deltaNotches = Integer.parseInt(m.getValue()); //should be a px value
+                        robot.mouseWheel(deltaNotches); //unit of scrolls = "notches of the wheel"
+                    }
+                    break;
             }
 
         }else if(m.getActionType().equals("Action")){
