@@ -67,6 +67,19 @@ public class Controller {
       //  controller.onLoad();
     }
 
+    public void kill(){
+        communicator = null;
+        data = new Data();
+        data.setDevice(Device.MOOSE);
+
+        try {
+            goToView("ConnectMooseView.fxml");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Kill ! ");
+    }
 
     //Getter & Setter
 
@@ -76,6 +89,10 @@ public class Controller {
 
     public Communicator getCommunicator(){
         return communicator;
+    }
+
+    public void portChanged(){
+
     }
 
     public Data getData(){

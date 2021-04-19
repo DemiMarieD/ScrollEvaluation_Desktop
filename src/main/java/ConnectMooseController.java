@@ -42,6 +42,12 @@ public class ConnectMooseController extends Controller {
         }
     }
 
+    @Override
+    public void portChanged() {
+        super.portChanged();
+        label_port.setText("Port:" + getCommunicator().getPort());
+    }
+
     public void setLayout(Boolean connected){
 
         if(connected){

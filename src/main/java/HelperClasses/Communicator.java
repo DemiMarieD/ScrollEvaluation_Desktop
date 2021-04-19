@@ -9,12 +9,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class Communicator {
-    private final int SERVER_PORT;
+    private int SERVER_PORT;
     private final String SERVER_IP;
 
     private PrintWriter output;
     private BufferedReader input;
-
+    private Thread thread_getMessage;
     private String status;
 
     ServerSocket serverSocket;
@@ -72,7 +72,19 @@ public class Communicator {
         return status;
     }
 
-
+    public void connectionLost(){
+        //Kill old thread
+        if(thread_getMessage != null) {
+            thread_getMessage.interrupt();
+            //todo close input/output ?!
+            Runnable updater2 = () -> {
+                controller.kill();
+            };
+            Platform.runLater(updater2);
+        }
+        //connect again (new)
+        startConnecting();
+    }
 
     //* Thread 1 *//
     class WaitingForConnection_Thread implements Runnable {
@@ -104,22 +116,33 @@ public class Communicator {
                     };
                     // UI update is run on the Application thread
                     Platform.runLater(updater2);
-                    new Thread(new GetMessage_Thread()).start();
+                    thread_getMessage = new Thread(new GetMessage_Thread());
+                    thread_getMessage.start();
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             } catch (IOException e) {
+
+                //Make new port if current one is in usage
+                SERVER_PORT++;
+                Runnable updater1 = () -> {
+                    controller.portChanged();
+                };
+                Platform.runLater(updater1);
+                startConnecting();
+
                 e.printStackTrace();
             }
         }
     }
 
+
     //* Thread 2 *//
     class GetMessage_Thread implements Runnable {
         @Override
         public void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()){
                 try {
                     final String message = input.readLine();
                     if (message != null) {
@@ -131,9 +154,8 @@ public class Communicator {
                         // UI update is run on the Application thread
                         Platform.runLater(updater);
                     } else {
-                        System.out.println("reload");
-                        WaitingForConnection_Thread = new Thread(new WaitingForConnection_Thread());
-                        WaitingForConnection_Thread.start();
+                        System.out.println("************* Reload");
+                        connectionLost();
                         return;
                     }
                 } catch (IOException e) {
@@ -154,14 +176,6 @@ public class Communicator {
         @Override
         public void run() {
             output.println(message);
-            //output.flush(); //auto flush
-            //Run in Main Thread (change UI)
-           /* Runnable updater = () -> {
-                status = status + "server: " + message + "\n";
-                controller.incomingMessage(status);
-            };
-            // UI update is run on the Application thread
-            Platform.runLater(updater); */
             System.out.println("Server - message send: '"+ message+ "'.");
         }
     }
