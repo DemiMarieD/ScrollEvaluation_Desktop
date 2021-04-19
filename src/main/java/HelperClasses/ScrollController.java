@@ -1,5 +1,6 @@
 package HelperClasses;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -27,13 +28,17 @@ public class ScrollController extends Controller{
     private InlineCssTextArea textArea;
     private Thread scrollThread;
     private Robot robot;
+    //for flick
+    private double currentSpeed;
 
-    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK,
+
+    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG,
+            ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
-            ScrollingMode.WHEEL, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK));
+            ScrollingMode.WHEEL, ScrollingMode.THUMB));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Drag + Accel.", "Flick", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb", "Multi Flick"));
+            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -168,28 +173,96 @@ public class ScrollController extends Controller{
 
                 //----- Simple flick
                 case "Flick":
-                    if (m.getActionName().equals("deltaY")) {
-                        double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                        if (scrollPane.isHover()) {
-                            scrollPane.scrollYBy(deltaY);
-                        }
+                    switch (m.getActionName()) {
+                        case "deltaY":
+                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+                            if (scrollPane.isHover()) {
+                                scrollPane.scrollYBy(deltaY);
+                            }
 
-                    } else if (m.getActionName().equals("speed")) {
-                        double pxPerMs = Double.parseDouble(m.getValue());
-                        if (getData().getMode() == ScrollingMode.FAST_FLICK) {
-                            pxPerMs = pxPerMs * 1.3;
-                        }
-                        scrollThread = new Thread(new ScrollThread(1, pxPerMs));
-                        scrollThread.start();
+                            break;
+                        case "speed":
+                            double pxPerMs = Double.parseDouble(m.getValue());
+                            scrollThread = new Thread(new ScrollThread(1, pxPerMs));
+                            scrollThread.start();
 
-                    } else if (m.getActionName().equals("stop")) {
-                        scrollThread.interrupt();
+                            break;
+                        case "stop":
+                            scrollThread.interrupt();
+                            break;
                     }
 
 
 
                     break;
 
+                //----- Simple flick
+                case "DecelFlick":
+                    switch (m.getActionName()) {
+                        case "deltaY":
+                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+                            if (scrollPane.isHover()) {
+                                scrollPane.scrollYBy(deltaY);
+                            }
+
+                            break;
+                        case "speed":
+                            double pxPerMs = Double.parseDouble(m.getValue());
+                            scrollThread = new Thread(new DecScrollThread(pxPerMs));
+                            scrollThread.start();
+
+                            break;
+
+                        case "addSpeed":
+                            double addPx = Double.parseDouble(m.getValue());
+                            currentSpeed = currentSpeed + addPx;
+                            scrollThread.interrupt();
+                            scrollThread = new Thread(new DecScrollThread(currentSpeed));
+                            scrollThread.start();
+
+                            break;
+                        case "stop":
+                            scrollThread.interrupt();
+                            break;
+                    }
+
+                    break;
+
+                //----- Multi flick - additive
+                case "MultiFlick":
+                    switch (m.getActionName()) {
+                        case "deltaY":
+                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+
+                            if (scrollPane.isHover()) {
+                                scrollPane.scrollYBy(deltaY);
+                            }
+
+                            break;
+                        case "speed":
+                            double pxPerMs = Double.parseDouble(m.getValue());
+                            currentSpeed = pxPerMs;
+                            scrollThread = new Thread(new ScrollThread(1, pxPerMs));
+                            scrollThread.start();
+
+                            break;
+
+                        case "addSpeed":
+                            double addPx = Double.parseDouble(m.getValue());
+                            currentSpeed = currentSpeed + addPx;
+                            scrollThread.interrupt();
+                            scrollThread = new Thread(new ScrollThread(1, currentSpeed));
+                            scrollThread.start();
+
+                            break;
+                        case "stop":
+                            scrollThread.interrupt();
+                            break;
+                    }
+
+
+
+                    break;
                 //----- Circle
                 case "Circle3":
                     if (m.getActionName().equals("deltaAngle")) {
@@ -273,6 +346,46 @@ public class ScrollController extends Controller{
 
     }
 
+    public class DecScrollThread implements Runnable{
+        double maxTime = 2500; // 2 sec
+        double startTime;
+        double speed_init;
+        boolean end = false;
+        public DecScrollThread(double speed){
+            this.speed_init = speed;
+            this.startTime = System.currentTimeMillis()+500; // + 500ms as for 0.5se the speed should stay same
+        }
+        @Override
+        public void run() {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    if (scrollPane.isHover() && !end) {
+                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
+                        double deltaPx = speed_init - speed_init * (deltaT / maxTime);
+                        Runnable updater1 = () -> {
+                            currentSpeed = deltaPx;
+                        };
+                        Platform.runLater(updater1);
+                        scrollPane.scrollYBy(deltaPx);
+                        end = deltaT >= maxTime;
+                        if(end){
+                            Runnable updater = () -> {
+                                Message message = new Message("Server", "Info", "StoppedScroll");
+                                getCommunicator().sendMessage(message.makeMessage());
+                            };
+                            Platform.runLater(updater);
+                        }
+                       Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
+                    }else{
+                        scrollThread.interrupt();
+                    }
+                }
+            } catch (InterruptedException e) {
+                //we need this because when a sleep the interrupt from outside throws an exception
+                Thread.currentThread().interrupt();
+            }
+        }
 
+    }
 
 }
