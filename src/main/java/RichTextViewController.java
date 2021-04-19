@@ -1,8 +1,5 @@
 import HelperClasses.*;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
@@ -24,15 +21,12 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
-import java.awt.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.IntFunction;
 
-public class RichTextViewController extends Controller {
+public class RichTextViewController extends ScrollController {
     final int scrollBarWidth = 20; //px
 
     @FXML
@@ -49,8 +43,6 @@ public class RichTextViewController extends Controller {
     private  Pane frame;
     @FXML
     private ScrollPane scrollPane_parent;
-    private VirtualizedScrollPane<InlineCssTextArea> scrollPane;
-    private InlineCssTextArea textArea;
 
     //For Framing Task
     private long startTime;
@@ -59,52 +51,17 @@ public class RichTextViewController extends Controller {
     private int distance; //in number of lines
     private double frameSize; // in number of lines
 
-   // private final ArrayList<Integer> Distances =  new ArrayList<Integer>(Arrays.asList(6, 24, 96, 192));  //in number of lines
-   // private final ArrayList<Integer> FrameSizes = new ArrayList<Integer>(Arrays.asList(6, 18)); //in number of lines
-
     private MediaPlayer wrongPlayer;
     private MediaPlayer rightPlayer;
-
-    // For Moose Scrolling
-    private Thread scrollThread;
-    private Robot robot;
-
-
-
-    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK,
-            ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
-            ScrollingMode.WHEEL, ScrollingMode.THUMB, ScrollingMode.FAST_FLICK));
-
-    private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Drag + Accel.", "Flick", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb", "Multi Flick"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
         super.initData(communicator, data);
-        if(getData().getDevice() == Device.MOOSE){
-            getCommunicator().changeController(this); //to receive Messages
-            String item = list.get(modes.indexOf(data.getMode()));
-            cb.setValue(item);
-        }
 
-        // Robot is used for click actions with Moose
-        robot = getRobot();
+        setComboBox(cb);
 
-
-        //Set mode depending on selection
-        if(data.getDevice() == Device.MOOSE) {
-            cb.setItems(FXCollections.observableArrayList(list));
-            cb.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-                @Override
-                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                    data.setMode(modes.get(newValue.intValue()));
-                    String m = modes.get(newValue.intValue()).getValue();
-                    System.out.println("Setting mode: " + m);
-                    getCommunicator().sendMessage(new HelperClasses.Message("Server", "Mode", m).makeMessage());
-                }
-            });
-        }else{
-            cb.setVisible(false);
+        if(getData().getDevice() == Device.MOOSE) {
+            setController(this);
         }
 
         getMainPane().addEventFilter(KeyEvent.KEY_PRESSED, event->{
@@ -125,19 +82,21 @@ public class RichTextViewController extends Controller {
 
         Platform.runLater(() -> {
             setUpPanesAndTarget();
-            scrollPane.requestFocus(); // so on space-bar hit no accidental button press
+            getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
         });
     }
 
     public void setUpScrollPane(){
-        textArea = new InlineCssTextArea();
+        InlineCssTextArea textArea = new InlineCssTextArea();
         textArea.appendText(getText("src/main/resources/files/loremIpsum.txt"));
         textArea.setWrapText(true);
         textArea.setEditable(false);
         //padding to leave room for line numbers
         textArea.setPadding(new Insets(0,0,0,60));
+        setTextArea(textArea);
 
-        scrollPane = new VirtualizedScrollPane<>(textArea);
+        VirtualizedScrollPane scrollPane = new VirtualizedScrollPane<>(textArea);
+        setScrollPane(scrollPane);
         scrollPane_parent.setContent(scrollPane);
 
         scrollPane_parent.setFitToWidth(true);
@@ -149,6 +108,7 @@ public class RichTextViewController extends Controller {
     }
 
     public void setUpPanesAndTarget(){
+        InlineCssTextArea textArea = getTextArea();
         //** Split each line of paragraph
         for(int i = 0; i < textArea.getParagraphs().size(); i++){
             if(textArea.getParagraphLinesCount(i) > 1) {
@@ -193,12 +153,13 @@ public class RichTextViewController extends Controller {
         Platform.runLater(() -> {
             addLineNumbers();
             setTarget();
-            scrollPane.scrollYToPixel(0);
+            getScrollPane().scrollYToPixel(0);
             topPane.setVisible(false);
         });
     }
 
     public void addLineNumbers(){
+        InlineCssTextArea textArea = getTextArea();
         //** Add line numbers
         IntFunction<Node> numberFactory = LineNumberFactory.get(textArea);
         IntFunction<Node> graphicFactory = line -> {
@@ -218,7 +179,7 @@ public class RichTextViewController extends Controller {
         //** Set Target
         targetNumber++;
         startTime = System.currentTimeMillis();
-
+        InlineCssTextArea textArea = getTextArea();
         // first target random ?!
         if(targetNumber == 1){
             targetIndex = getRandomValidTargetIndex();
@@ -271,7 +232,7 @@ public class RichTextViewController extends Controller {
         //** Set Target indicator
         double minY = scrollPane_parent.getBoundsInParent().getMinY();
         double relativeIndex = (double) targetIndex / textArea.getParagraphs().size();
-        double distanceToTop = scrollPane.getHeight() * relativeIndex;
+        double distanceToTop = getScrollPane().getHeight() * relativeIndex;
         double centerPosition = minY + distanceToTop;
         double yPos = centerPosition - (indicator.getHeight()/2) + 1; //+1px boarder
 
@@ -284,6 +245,7 @@ public class RichTextViewController extends Controller {
 
     private int getRandomValidTargetIndex() {
         Random random = new Random();
+        InlineCssTextArea textArea = getTextArea();
         int totalNumberOfLines = textArea.getParagraphs().size();
 
         //!! minus lines that can be reached outside the smallest frame
@@ -305,7 +267,7 @@ public class RichTextViewController extends Controller {
     }
 
     public void updateFrameHeight(){
-        Text t = (Text) textArea.lookup(".text");
+        Text t = (Text) getTextArea().lookup(".text");
         double lineHeight = t.getBoundsInLocal().getHeight();
         double frameSize_px = frameSize * lineHeight;
 
@@ -324,7 +286,7 @@ public class RichTextViewController extends Controller {
         long deltaTime = System.currentTimeMillis() - startTime;
         System.out.println("-- Time of Phase "+ targetNumber +" = " + deltaTime);
 
-        Optional<Bounds> bounds = textArea.getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
+        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
         if(!bounds.isEmpty()) {
             double lineY_min = bounds.get().getMinY();
             double lineY_max = bounds.get().getMaxY();
@@ -347,6 +309,7 @@ public class RichTextViewController extends Controller {
 
 
         //remove old target and set new one
+        InlineCssTextArea textArea = getTextArea();
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
         setTarget();
@@ -359,13 +322,14 @@ public class RichTextViewController extends Controller {
 
     public void startTrial(ActionEvent actionEvent) {
         targetNumber = 0; //restart phases
-        targetIndex = Integer.parseInt(distanceInput.getText());
+        distance = Integer.parseInt(distanceInput.getText());
         frameSize = Integer.parseInt(frameInput.getText());
 
         System.out.println(" -------- NEW TRIAL -------- ");
-        scrollPane.requestFocus(); // so on space-bar hit no accidental button press
+        getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
 
         //remove old target and set new one
+        InlineCssTextArea textArea = getTextArea();
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
         setTarget();
@@ -400,169 +364,6 @@ public class RichTextViewController extends Controller {
         double dpi = Screen.getPrimary().getDpi();
         // mm  * pixels/inch * inch/mm
         return (mm * dpi) / 25.4;
-    }
-
-    // --------------------  Moose Scrolling ------------------------------------
-
-    // Incoming Messages from Moose for scrolling -todo maybe in controller ?
-    @Override
-    public void incomingMessage(String message) {
-        super.incomingMessage(message);
-        Message m = new Message(message);
-
-        //check if mode and action are the same
-        String mode = getData().getMode().getValue();
-        if(mode.equals(m.getActionType())) {
-
-            //----- Normal Drag or Rubbing
-            switch (m.getActionType()) {
-                case "Scroll":
-                case "Rubbing":
-                case "DragAcceleration":
-                case "Drag":
-                    if (m.getActionName().equals("deltaY")) {
-                        double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                        if (scrollPane.isHover()) {
-                            scrollPane.scrollYBy(deltaY);
-                        }
-                    }
-
-
-                    break;
-
-                // Dragging the thumb
-                case "Thumb":
-                    if (m.getActionName().equals("deltaY")) {
-                        double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
-
-                        Text t = (Text) textArea.lookup(".text");
-                        double lineHeight = t.getBoundsInLocal().getHeight();
-                        int totalNumberOfLines = textArea.getParagraphs().size();
-                        double scrollContentHeight = totalNumberOfLines * lineHeight;
-
-                        // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
-                        // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
-                        // Paging = Block Increment/Decrement
-
-                        ScrollBar scrollBar = (ScrollBar) scrollPane.lookup(".scroll-bar:vertical");
-                        double visibleAmount = scrollBar.getVisibleAmount(); //size of page px
-                        //System.out.println("Visible Amount " + visibleAmount);
-                        //System.out.println("Height of Pane " + scrollPane.getHeight());
-
-                        double deltaY = (deltaY_Thumb / visibleAmount) * scrollContentHeight; //scrollPane_parent.getHeight()
-
-                        if (scrollPane.isHover()) {
-                            scrollPane.scrollYBy(deltaY);
-                        }
-                    }
-
-                    break;
-
-                //----- Simple flick
-                case "Flick":
-                    if (m.getActionName().equals("deltaY")) {
-                        double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                        if (scrollPane.isHover()) {
-                            scrollPane.scrollYBy(deltaY);
-                        }
-
-                    } else if (m.getActionName().equals("speed")) {
-                        double pxPerMs = Double.parseDouble(m.getValue());
-                        if (getData().getMode() == ScrollingMode.FAST_FLICK) {
-                            pxPerMs = pxPerMs * 1.3;
-                        }
-                        scrollThread = new Thread(new ScrollThread(1, pxPerMs));
-                        scrollThread.start();
-
-                    } else if (m.getActionName().equals("stop")) {
-                        scrollThread.interrupt();
-                    }
-
-
-
-                    break;
-
-                //----- Circle
-                case "Circle3":
-                    if (m.getActionName().equals("deltaAngle")) {
-                        double deltaY = Double.parseDouble(m.getValue());
-                        if (scrollPane.isHover()) {
-                            scrollPane.scrollYBy(deltaY);
-                        }
-                    }
-
-
-
-                    break;
-
-                //----- Rate-Based
-                case "TrackPoint":
-                    if (m.getActionName().equals("deltaY")) {
-
-                        //stop old thread
-                        if (scrollPane.isHover() && scrollThread != null && !scrollThread.isInterrupted()) {
-                            scrollThread.interrupt();
-                        }
-
-                        double deltaY = Double.parseDouble(m.getValue()); //px
-                        scrollThread = new Thread(new ScrollThread(1, deltaY));
-                        scrollThread.start();
-
-                    } else if (m.getActionName().equals("stop")) {
-                        scrollThread.interrupt();
-                    }
-
-
-
-                    break;
-
-                // SCROLL WHEEL
-                case "ScrollWheel":
-                    if (m.getActionName().equals("deltaNotches")) {
-                        int deltaNotches = Integer.parseInt(m.getValue()); //should be a px value
-                        robot.mouseWheel(deltaNotches); //unit of scrolls = "notches of the wheel"
-                    }
-                    break;
-            }
-
-        }else if(m.getActionType().equals("Action")){
-            if (m.getActionName().equals("click")) {
-                robot.mousePress(16);
-                robot.mouseRelease(16);
-
-            }
-        } else {
-            System.out.println("Mode and Action type are not same.");
-        }
-
-    }
-
-
-    // Continuous Scrolling
-    public class ScrollThread implements Runnable{
-        int time;
-        double deltaPx;
-        public ScrollThread(int time, double px){
-            this.time = time;
-            this.deltaPx = px;
-        }
-        @Override
-        public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    if (scrollPane.isHover()) {
-                        scrollPane.scrollYBy(deltaPx);
-                        Thread.sleep(time); //1 min = 60*1000, 1 sec = 1000
-                    }else{
-                        scrollThread.interrupt();
-                    }
-                }
-            } catch (InterruptedException e) {
-                //we need this because when a sleep the interrupt from outside throws an exception
-                Thread.currentThread().interrupt();
-            }
-        }
-
     }
 
 

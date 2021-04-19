@@ -32,8 +32,6 @@ public class Controller {
         }
     }
 
-    public void onLoad(){
-    }
 
     public void incomingMessage(String message) {
         System.out.println("-- NEW MESSAGE: " + message);
