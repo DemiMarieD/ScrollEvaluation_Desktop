@@ -1,5 +1,7 @@
 import HelperClasses.*;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
@@ -30,6 +32,8 @@ public class RichTextViewController extends ScrollController {
     final int scrollBarWidth = 20; //px
 
     @FXML
+    private RadioButton maxSpeedButton;
+    @FXML
     private ComboBox cb;
     @FXML
     private TextField frameInput;
@@ -50,6 +54,7 @@ public class RichTextViewController extends ScrollController {
     private int targetNumber;
     private int distance; //in number of lines
     private double frameSize; // in number of lines
+    private double maxScrollVal;
 
     private MediaPlayer wrongPlayer;
     private MediaPlayer rightPlayer;
@@ -70,6 +75,16 @@ public class RichTextViewController extends ScrollController {
             }
         });
 
+
+        maxSpeedButton.setSelected(false);
+        setMaxSpeedSet(maxSpeedButton.isSelected());
+        maxSpeedButton.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean newer) {
+                setMaxSpeedSet(maxSpeedButton.isSelected());
+            }
+        });
+
         //Media new File(path).toURI().toString()
         wrongPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/wrong.wav").toURI().toString()));
         rightPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/success.wav").toURI().toString()));
@@ -79,6 +94,23 @@ public class RichTextViewController extends ScrollController {
         distance = 60;
 
         setUpScrollPane();
+
+        maxScrollVal = 11859; //default - to be overwritten
+        if(getData().getDevice() == Device.MOOSE) {
+            getScrollPane().estimatedScrollYProperty().addListener(new ChangeListener<Double>() {
+                @Override
+                public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue) {
+                    //System.out.println("New Val: " + newValue + " max " + maxScrollVal);
+                    if (newValue == 0 || newValue == maxScrollVal) {
+                        Message message = new Message("Server", "Info", "StoppedScroll");
+                        getCommunicator().sendMessage(message.makeMessage());
+                        if(getScrollThread() != null) {
+                            getScrollThread().interrupt();
+                        }
+                    }
+                }
+            });
+        }
 
         Platform.runLater(() -> {
             setUpPanesAndTarget();
@@ -153,8 +185,17 @@ public class RichTextViewController extends ScrollController {
         Platform.runLater(() -> {
             addLineNumbers();
             setTarget();
+            setMaxScrollVal();
             getScrollPane().scrollYToPixel(0);
             topPane.setVisible(false);
+        });
+    }
+
+    public void setMaxScrollVal(){
+        setScrollContentHeight();
+        Platform.runLater(() -> {
+            getScrollPane().scrollYToPixel(getScrollContentHeight());
+            maxScrollVal = getScrollPane().estimatedScrollYProperty().getValue();
         });
     }
 

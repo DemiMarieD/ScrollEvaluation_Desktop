@@ -30,7 +30,10 @@ public class ScrollController extends Controller{
     private Robot robot;
     //for flick
     private double currentSpeed;
+    private double scrollContentHeight;
 
+    private boolean maxSpeedSet;
+    private final double MAX_SPEED = 2.1; // px/ms
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG,
             ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
@@ -72,6 +75,16 @@ public class ScrollController extends Controller{
         }
     }
 
+    public double getScrollContentHeight() {
+        return scrollContentHeight;
+    }
+
+    public void setScrollContentHeight() {
+        Text t = (Text) textArea.lookup(".text");
+        double lineHeight = t.getBoundsInLocal().getHeight();
+        int totalNumberOfLines = textArea.getParagraphs().size();
+        scrollContentHeight = totalNumberOfLines * lineHeight;
+    }
 
     public VirtualizedScrollPane<InlineCssTextArea> getScrollPane() {
         return scrollPane;
@@ -117,6 +130,14 @@ public class ScrollController extends Controller{
         return content;
     }
 
+    public boolean getMaxSpeedSet() {
+        return maxSpeedSet;
+    }
+
+    public void setMaxSpeedSet(boolean maxSpeedSet) {
+        this.maxSpeedSet = maxSpeedSet;
+    }
+
     // Incoming Messages from Moose for scrolling
     @Override
     public void incomingMessage(String message) {
@@ -148,10 +169,7 @@ public class ScrollController extends Controller{
                     if (m.getActionName().equals("deltaY")) {
                         double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
 
-                        Text t = (Text) textArea.lookup(".text");
-                        double lineHeight = t.getBoundsInLocal().getHeight();
-                        int totalNumberOfLines = textArea.getParagraphs().size();
-                        double scrollContentHeight = totalNumberOfLines * lineHeight;
+
 
                         // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
                         // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
@@ -183,6 +201,9 @@ public class ScrollController extends Controller{
                             break;
                         case "speed":
                             double pxPerMs = Double.parseDouble(m.getValue());
+                            if(maxSpeedSet){
+                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
+                            }
                             scrollThread = new Thread(new ScrollThread(1, pxPerMs));
                             scrollThread.start();
 
@@ -208,6 +229,9 @@ public class ScrollController extends Controller{
                             break;
                         case "speed":
                             double pxPerMs = Double.parseDouble(m.getValue());
+                            if(maxSpeedSet){
+                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
+                            }
                             scrollThread = new Thread(new DecScrollThread(pxPerMs));
                             scrollThread.start();
 
@@ -216,6 +240,9 @@ public class ScrollController extends Controller{
                         case "addSpeed":
                             double addPx = Double.parseDouble(m.getValue());
                             currentSpeed = currentSpeed + addPx;
+                            if(maxSpeedSet){
+                                currentSpeed = Math.min(MAX_SPEED, currentSpeed);
+                            }
                             scrollThread.interrupt();
                             scrollThread = new Thread(new DecScrollThread(currentSpeed));
                             scrollThread.start();
@@ -241,6 +268,9 @@ public class ScrollController extends Controller{
                             break;
                         case "speed":
                             double pxPerMs = Double.parseDouble(m.getValue());
+                            if(maxSpeedSet){
+                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
+                            }
                             currentSpeed = pxPerMs;
                             scrollThread = new Thread(new ScrollThread(1, pxPerMs));
                             scrollThread.start();
@@ -250,6 +280,9 @@ public class ScrollController extends Controller{
                         case "addSpeed":
                             double addPx = Double.parseDouble(m.getValue());
                             currentSpeed = currentSpeed + addPx;
+                            if(maxSpeedSet){
+                                currentSpeed = Math.min(MAX_SPEED, currentSpeed);
+                            }
                             scrollThread.interrupt();
                             scrollThread = new Thread(new ScrollThread(1, currentSpeed));
                             scrollThread.start();
@@ -286,6 +319,9 @@ public class ScrollController extends Controller{
                         }
 
                         double deltaY = Double.parseDouble(m.getValue()); //px
+                        if(maxSpeedSet){
+                            deltaY = Math.min(MAX_SPEED, deltaY);
+                        }
                         scrollThread = new Thread(new ScrollThread(1, deltaY));
                         scrollThread.start();
 
