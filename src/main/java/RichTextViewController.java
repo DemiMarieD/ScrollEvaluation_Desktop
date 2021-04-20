@@ -186,7 +186,6 @@ public class RichTextViewController extends ScrollController {
             addLineNumbers();
             setTarget();
             setMaxScrollVal();
-            getScrollPane().scrollYToPixel(0);
             topPane.setVisible(false);
         });
     }
@@ -196,6 +195,7 @@ public class RichTextViewController extends ScrollController {
         Platform.runLater(() -> {
             getScrollPane().scrollYToPixel(getScrollContentHeight());
             maxScrollVal = getScrollPane().estimatedScrollYProperty().getValue();
+            getScrollPane().scrollYToPixel(0);
         });
     }
 

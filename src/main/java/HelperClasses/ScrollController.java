@@ -36,12 +36,12 @@ public class ScrollController extends Controller{
     private final double MAX_SPEED = 2.1; // px/ms
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG,
-            ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
+            ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration, ScrollingMode.FLICK_iphone,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
             ScrollingMode.WHEEL, ScrollingMode.THUMB));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
+            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -204,6 +204,9 @@ public class ScrollController extends Controller{
                             if(maxSpeedSet){
                                 pxPerMs = Math.min(MAX_SPEED, pxPerMs);
                             }
+                            if(!scrollThread.isInterrupted()){
+                                scrollThread.interrupt();
+                            }
                             scrollThread = new Thread(new ScrollThread(1, pxPerMs));
                             scrollThread.start();
 
@@ -217,7 +220,37 @@ public class ScrollController extends Controller{
 
                     break;
 
-                //----- Simple flick
+                //----- Decelerating & Additative flick
+                case "IPhoneFlick":
+                    switch (m.getActionName()) {
+                        case "deltaY":
+                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+                            if (scrollPane.isHover()) {
+                                scrollPane.scrollYBy(deltaY);
+                            }
+
+                            break;
+                        case "speed":
+                            double pxPerMs = Double.parseDouble(m.getValue());
+                            if(maxSpeedSet){
+                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
+                            }
+                            if(scrollThread != null && !scrollThread.isInterrupted()){
+                                scrollThread.interrupt();
+                            }
+                            scrollThread = new Thread(new IPhoneScrollThread(pxPerMs));
+                            scrollThread.start();
+
+                            break;
+
+                        case "stop":
+                            scrollThread.interrupt();
+                            break;
+                    }
+
+                    break;
+
+                //----- Decelerating & Additative flick
                 case "DecelFlick":
                     switch (m.getActionName()) {
                         case "deltaY":
@@ -254,6 +287,8 @@ public class ScrollController extends Controller{
                     }
 
                     break;
+
+
 
                 //----- Multi flick - additive
                 case "MultiFlick":
@@ -412,6 +447,55 @@ public class ScrollController extends Controller{
                             Platform.runLater(updater);
                         }
                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
+                    }else{
+                        scrollThread.interrupt();
+                    }
+                }
+            } catch (InterruptedException e) {
+                //we need this because when a sleep the interrupt from outside throws an exception
+                Thread.currentThread().interrupt();
+            }
+        }
+
+    }
+
+    public class IPhoneScrollThread implements Runnable{
+
+        double startTime;
+        double speed_init;
+        boolean end = false;
+        // friction  = 750 px/s2
+        double friction = 0.00075;
+        public IPhoneScrollThread(double speed){
+            this.speed_init = speed;
+            this.startTime = System.currentTimeMillis()+500; // + 500ms as for 0.5se the speed should stay same
+        }
+        @Override
+        public void run() {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    if (scrollPane.isHover() && !end) {
+                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
+                        //New speed = m * flick speed – (friction * delta-time)
+                        double deltaPx = Math.abs (speed_init) - ( friction * deltaT );
+                        deltaPx = Math.max(0, deltaPx);
+
+                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
+                        scrollPane.scrollYBy(move);
+                        Runnable updater1 = () -> {
+                            currentSpeed = move;
+                        };
+                        Platform.runLater(updater1);
+
+                        end = deltaPx == 0;
+                        if(end){
+                            Runnable updater = () -> {
+                                Message message = new Message("Server", "Info", "StoppedScroll");
+                                getCommunicator().sendMessage(message.makeMessage());
+                            };
+                            Platform.runLater(updater);
+                        }
+                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
                     }else{
                         scrollThread.interrupt();
                     }
