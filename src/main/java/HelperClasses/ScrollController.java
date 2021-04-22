@@ -10,6 +10,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 
@@ -565,11 +566,11 @@ public class ScrollController extends Controller{
                 while (!Thread.currentThread().isInterrupted()) {
                     if (scrollPane.isHover() && !end) {
                         double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
-                        //New speed = m * flick speed – (friction * delta-time)
-                        //580.31 e^(-2.006x) (mm / sec) -> ms div 1000 -> sec
                         //System.out.println("Friction = " + Math.exp ( -2.006 * (deltaT/1000)));
-                        double deltaPx = Math.abs (speed_init) * Math.exp ( -2.006 * (deltaT/1000) );
-                        deltaPx = Math.max(0, deltaPx);
+                        double init_mm = toMM(speed_init);
+                        //580.31 e^(-2.006x) (mm / sec) -> ms div 1000 -> sec
+                        double delta_mm = Math.abs (init_mm) * Math.exp ( -2.006 * (deltaT/1000) );
+                        double deltaPx = Math.max(0, toPx(delta_mm));
 
                         double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
                         scrollPane.scrollYBy(move);
@@ -578,7 +579,7 @@ public class ScrollController extends Controller{
                         };
                         Platform.runLater(updater1);
 
-                        end = deltaPx < 0.0001;
+                        end = deltaPx < 0.01;
                         if(end){
                             Runnable updater = () -> {
                                 Message message = new Message("Server", "Info", "StoppedScroll");
@@ -597,6 +598,21 @@ public class ScrollController extends Controller{
             }
         }
 
+    }
+
+    public double toMM(double px){
+        // dpi = pixels/inch
+        double dpi = Screen.getPrimary().getDpi();
+        // mm  * pixels/inch * inch/mm
+        return (px * 25.4) / dpi;
+    }
+
+
+    public double toPx(double mm){
+        // dpi = pixels/inch
+        double dpi = Screen.getPrimary().getDpi();
+        // mm  * pixels/inch * inch/mm
+        return (mm * dpi) / 25.4;
     }
 
 }
