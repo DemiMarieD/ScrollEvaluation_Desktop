@@ -38,12 +38,12 @@ public class ScrollController extends Controller{
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG,
             ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
-            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS,
+            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS, ScrollingMode.FLICK_iOS_2,
             ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
             ScrollingMode.WHEEL, ScrollingMode.THUMB));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
+            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS", "iOS_2", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -171,8 +171,6 @@ public class ScrollController extends Controller{
                     if (m.getActionName().equals("deltaY")) {
                         double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
 
-
-
                         // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
                         // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
                         // Paging = Block Increment/Decrement
@@ -253,6 +251,7 @@ public class ScrollController extends Controller{
                     break;
 
                 // ....
+                case "iOS2":
                 case "iOS":
                     switch (m.getActionName()) {
                         case "deltaY":
@@ -275,17 +274,6 @@ public class ScrollController extends Controller{
 
                             break;
 
-                        case "addSpeed":
-                            double addPx = Double.parseDouble(m.getValue());
-                            currentSpeed = currentSpeed + addPx;
-                            if(maxSpeedSet){
-                                currentSpeed = Math.min(MAX_SPEED, currentSpeed);
-                            }
-                            scrollThread.interrupt();
-                            scrollThread = new Thread(new ExponentialRegressionScrollThread(currentSpeed));
-                            scrollThread.start();
-
-                            break;
                         case "stop":
                             scrollThread.interrupt();
                             break;
