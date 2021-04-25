@@ -49,11 +49,18 @@ public class RichTextViewController extends ScrollController {
     private ScrollPane scrollPane_parent;
 
     //For Framing Task
-    private long startTime;
+    private Trial currentTrial;
+    // private long startTime;
     private int targetIndex;
     private int targetNumber;
     private int distance; //in number of lines
     private double frameSize; // in number of lines
+    private String direction;
+    private boolean scrollStarted;
+    private boolean targetVisible;
+    private boolean targetInFrame;
+
+
     private double maxScrollVal;
 
     private MediaPlayer wrongPlayer;
@@ -96,10 +103,38 @@ public class RichTextViewController extends ScrollController {
         setUpScrollPane();
 
         maxScrollVal = 11859; //default - to be overwritten
-        if(getData().getDevice() == Device.MOOSE) {
-            getScrollPane().estimatedScrollYProperty().addListener(new ChangeListener<Double>() {
-                @Override
-                public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue) {
+
+        getScrollPane().estimatedScrollYProperty().addListener(new ChangeListener<Double>() {
+            @Override
+            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue) {
+               //on set up it also scrolls so we need to check that currentTrial is already defined
+                if(currentTrial != null) {
+                    if (!scrollStarted) {
+                        currentTrial.setTime_scrollStart(System.currentTimeMillis());
+                        scrollStarted = true;
+                    } else {
+                        currentTrial.setTime_scrollEnd( System.currentTimeMillis());
+                    }
+                }
+
+                //check if target visible -> on change increment counter
+                boolean isVisible = isVisible();
+                if( !targetVisible && isVisible){
+                    currentTrial.targetVisible();
+                    currentTrial.setTime_lastVisible(System.currentTimeMillis());
+                }
+                targetVisible = isVisible;
+
+                //check if target in frame -> on change increment counter
+                boolean isInFrame = isInFrame();
+                if( !targetInFrame && isInFrame){
+                    currentTrial.targetInFrame();
+                }
+                targetInFrame = isInFrame;
+
+
+
+                if(getData().getDevice() == Device.MOOSE) {
                     //System.out.println("New Val: " + newValue + " max " + maxScrollVal);
                     if (newValue == 0 || newValue == maxScrollVal) {
                         Message message = new Message("Server", "Info", "StoppedScroll");
@@ -109,13 +144,36 @@ public class RichTextViewController extends ScrollController {
                         }
                     }
                 }
-            });
-        }
+            }
+        });
 
         Platform.runLater(() -> {
             setUpPanesAndTarget();
             getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
         });
+    }
+
+    private boolean isVisible() {
+        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(targetIndex);
+        return bounds.isPresent();
+    }
+
+    private boolean isInFrame() {
+        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(targetIndex);
+        if(bounds.isPresent()) {
+            double lineY_min = bounds.get().getMinY();
+            double lineY_max = bounds.get().getMaxY();
+            // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
+
+            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
+            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
+            // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
+
+           return frameY_min < lineY_min && frameY_max > lineY_max;
+
+        }else{
+            return false;
+        }
     }
 
     public void setUpScrollPane(){
@@ -127,7 +185,7 @@ public class RichTextViewController extends ScrollController {
         textArea.setPadding(new Insets(0,0,0,60));
         setTextArea(textArea);
 
-        VirtualizedScrollPane scrollPane = new VirtualizedScrollPane<>(textArea);
+        VirtualizedScrollPane<InlineCssTextArea> scrollPane = new VirtualizedScrollPane<>(textArea);
         setScrollPane(scrollPane);
         scrollPane_parent.setContent(scrollPane);
 
@@ -219,28 +277,42 @@ public class RichTextViewController extends ScrollController {
     public void setTarget() {
         //** Set Target
         targetNumber++;
-        startTime = System.currentTimeMillis();
+
+        setUpTask();
+
+        scrollStarted = false;
+        targetVisible = isVisible();
+        targetInFrame = isInFrame();
+
+        currentTrial = new Trial(getData().getParticipantID(), targetNumber, targetIndex, frameSize, distance, System.currentTimeMillis(), direction, getData().getDevice());
+        currentTrial.setMode(getData().getMode());
+        currentTrial.setLineHeight(getLineHeight());
+
+    }
+
+    public void setUpTask(){
         InlineCssTextArea textArea = getTextArea();
         // first target random ?!
         if(targetNumber == 1){
             targetIndex = getRandomValidTargetIndex();
+            direction = "DOWN";
 
             //highlight target
             int l = textArea.getParagraphLength(targetIndex);
             textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
 
             //random frame size
-           // frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
+            // frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
             updateFrameHeight();
 
             frame.setStyle("-fx-background-color: red");
             indicator.setStyle("-fx-background-color: #efc8c8");
 
-        // second (and all other even trials) UP a random distance
+            // second (and all other even trials) UP a random distance
         } else if(targetNumber % 2 == 0) {
-           //set NEW distance
-           //  distance = Distances.get(random.nextInt(Distances.size()));
-
+            //set NEW distance
+            //  distance = Distances.get(random.nextInt(Distances.size()));
+            direction = "UP";
             //scroll UP
             targetIndex = targetIndex-distance;
 
@@ -252,11 +324,11 @@ public class RichTextViewController extends ScrollController {
             indicator.setStyle("-fx-background-color: #c0c0f1");
 
 
-        //third (and all other uneven trials) DOWN the same distance BUT Update framesize
+            //third (and all other uneven trials) DOWN the same distance BUT Update framesize
         }else{
             //scroll DOWN
             targetIndex = targetIndex+distance;
-
+            direction = "DOWN";
             //highlight target
             int l = textArea.getParagraphLength(targetIndex);
             textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
@@ -269,10 +341,9 @@ public class RichTextViewController extends ScrollController {
             indicator.setStyle("-fx-background-color: #efc8c8");
         }
 
-
         //** Set Target indicator
         double minY = scrollPane_parent.getBoundsInParent().getMinY();
-        double relativeIndex = (double) targetIndex / textArea.getParagraphs().size();
+        double relativeIndex = (double) targetIndex / getTextArea().getParagraphs().size();
         double distanceToTop = getScrollPane().getHeight() * relativeIndex;
         double centerPosition = minY + distanceToTop;
         double yPos = centerPosition - (indicator.getHeight()/2) + 1; //+1px boarder
@@ -323,37 +394,47 @@ public class RichTextViewController extends ScrollController {
 
     public void checkTarget(){
         stopSounds();
+        currentTrial.setTime_trialEnd(System.currentTimeMillis());
 
-        long deltaTime = System.currentTimeMillis() - startTime;
-        System.out.println("-- Time of Phase "+ targetNumber +" = " + deltaTime);
 
-        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(targetIndex); //values fit more P 41 (aka index 42)
-        if(!bounds.isEmpty()) {
-            double lineY_min = bounds.get().getMinY();
-            double lineY_max = bounds.get().getMaxY();
-            // System.out.println("Bounds centerY " + lineY_min + " - " + lineY_max);
-
-            double frameY_min = frame.localToScreen(frame.getBoundsInLocal()).getMinY();
-            double frameY_max = frame.localToScreen(frame.getBoundsInLocal()).getMaxY();
-            // System.out.println("Bounds Frame " + frameY_min + " - " + frameY_max); // Bounds in parent + window to get in screen
-
-            if(frameY_min < lineY_min && frameY_max > lineY_max){
-                rightPlayer.play();
-
-            }else{
-                wrongPlayer.play();
-            }
-
+        if(isInFrame()){
+            rightPlayer.play();
+            currentTrial.setHit(true);
         }else{
-            wrongPlayer.play();
+            missedTarget();
         }
 
+        //write all data
+        currentTrial.writeTrial();
 
         //remove old target and set new one
         InlineCssTextArea textArea = getTextArea();
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
         setTarget();
+    }
+
+    public void missedTarget(){
+        wrongPlayer.play();
+        currentTrial.setHit(false);
+
+        //todo get delta lines that the target was missed by!
+
+        //Centering (old) target in screen so the scrolling distance is constant !
+        int firstLineToBeVisible = targetIndex - (getNumberOfVisibleLines()/2);
+        int absPositionTarget;
+        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(firstLineToBeVisible);
+        //if first line is already visible -> target is too far south -> scroll to last line
+        if(bounds.isEmpty()) {
+            absPositionTarget = getTextArea().getAbsolutePosition(firstLineToBeVisible, 0);
+        }else{
+            int lastLineToBeVisible = targetIndex + (getNumberOfVisibleLines()/2);
+            absPositionTarget = getTextArea().getAbsolutePosition(lastLineToBeVisible, 0);
+        }
+        getTextArea().moveTo(absPositionTarget);
+        getTextArea().requestFollowCaret();
+
+
     }
 
     public void stopSounds(){

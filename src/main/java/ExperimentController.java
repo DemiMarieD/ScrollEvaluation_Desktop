@@ -5,12 +5,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 
 import java.io.IOException;
 
 public class ExperimentController extends Controller {
 
 
+    @FXML
+    private TextField idField;
     @FXML
     private Label deviceLable;
 
@@ -58,6 +61,8 @@ public class ExperimentController extends Controller {
                 getCommunicator().sendMessage(new Message("Server", "Mode", getData().getMode().getValue()).makeMessage());
             }
         }
+
+        getData().setParticipantID(Integer.parseInt(idField.getText()));
 
         goToView("RichTextView.fxml");
     }

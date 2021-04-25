@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.text.*?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ExperimentController">
+<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ExperimentController">
     <children>
         <Label layoutX="302.0" layoutY="115.0" prefHeight="85.0" prefWidth="297.0" text="EXPERIMENT SET UP">
             <font>
@@ -21,5 +17,7 @@
       <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="150.0" text="&lt; Back" />
       <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="259.0" layoutY="227.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
         <ComboBox fx:id="cb" layoutX="337.0" layoutY="267.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
+      <TextField fx:id="idField" layoutX="367.0" layoutY="308.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
+      <Label layoutX="337.0" layoutY="312.0" prefHeight="17.0" prefWidth="60.0" text="Id:" />
     </children>
 </AnchorPane>

@@ -32,6 +32,7 @@ public class ScrollController extends Controller{
     //for flick
     private double currentSpeed;
     private double scrollContentHeight;
+    private double lineHeight;
 
     private boolean maxSpeedSet;
     private final double MAX_SPEED = 2.1; // px/ms
@@ -43,7 +44,7 @@ public class ScrollController extends Controller{
             ScrollingMode.WHEEL, ScrollingMode.THUMB));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS", "iOS_2", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
+            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS - Demi", "iOS (2)", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -77,15 +78,24 @@ public class ScrollController extends Controller{
         }
     }
 
+    public double getLineHeight() {
+        Text t = (Text) textArea.lookup(".text");
+        lineHeight = t.getBoundsInLocal().getHeight();
+        return lineHeight;
+    }
+
     public double getScrollContentHeight() {
         return scrollContentHeight;
     }
 
     public void setScrollContentHeight() {
-        Text t = (Text) textArea.lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
         int totalNumberOfLines = textArea.getParagraphs().size();
-        scrollContentHeight = totalNumberOfLines * lineHeight;
+        scrollContentHeight = totalNumberOfLines * getLineHeight();
+    }
+
+    public int getNumberOfVisibleLines(){
+        double numberOfLinesVisible = textArea.getHeight() / lineHeight;
+        return  (int) Math.round(numberOfLinesVisible);
     }
 
     public VirtualizedScrollPane<InlineCssTextArea> getScrollPane() {
@@ -252,7 +262,6 @@ public class ScrollController extends Controller{
 
                 // ....
                 case "iOS2":
-                case "iOS":
                     switch (m.getActionName()) {
                         case "deltaY":
                             double deltaY = Double.parseDouble(m.getValue()); //should be a px value
@@ -270,6 +279,34 @@ public class ScrollController extends Controller{
                                 scrollThread.interrupt();
                             }
                             scrollThread = new Thread(new ExponentialRegressionScrollThread(pxPerMs));
+                            scrollThread.start();
+
+                            break;
+
+                        case "stop":
+                            scrollThread.interrupt();
+                            break;
+                    }
+
+                    break;
+                case "iOS":
+                    switch (m.getActionName()) {
+                        case "deltaY":
+                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
+                            if (scrollPane.isHover()) {
+                                scrollPane.scrollYBy(deltaY);
+                            }
+
+                            break;
+                        case "speed":
+                            double pxPerMs = Double.parseDouble(m.getValue());
+                            if(maxSpeedSet){
+                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
+                            }
+                            if(scrollThread != null && !scrollThread.isInterrupted()){
+                                scrollThread.interrupt();
+                            }
+                            scrollThread = new Thread(new ExponentialRegression_2_ScrollThread(pxPerMs));
                             scrollThread.start();
 
                             break;
@@ -539,6 +576,58 @@ public class ScrollController extends Controller{
 
     }
 
+    public class ExponentialRegression_2_ScrollThread implements Runnable{
+
+        double startTime;
+        double speed_init;
+        boolean end = false;
+        public ExponentialRegression_2_ScrollThread(double speed){
+            this.speed_init = speed;
+            this.startTime = System.currentTimeMillis(); // + 500ms as for 0.5se the speed should stay same
+        }
+        @Override
+        public void run() {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    if (scrollPane.isHover() && !end) {
+                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
+                        //System.out.println("Friction = " + Math.exp ( -2.006 * (deltaT/1000)));
+                        // double init_mm = toMM(speed_init);
+                        // speed_init == px/ms -> to convert to mm/sec? todo
+                        // double init_mm = toMM(speed_init) / 1000; // v in mm/sec -> much worse !
+                        //todo make depend on speed? high speed falls faster then low?!
+
+                        double newDelta = Math.abs (speed_init) * Math.exp ( -1 * (deltaT/1000) );
+                        double deltaPx = Math.max(0, toPx(newDelta));
+
+                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
+                        scrollPane.scrollYBy(move);
+                        Runnable updater1 = () -> {
+                            currentSpeed = move;
+                        };
+                        Platform.runLater(updater1);
+
+                        end = deltaPx < 0.01;
+                        if(end){
+                            Runnable updater = () -> {
+                                Message message = new Message("Server", "Info", "StoppedScroll");
+                                getCommunicator().sendMessage(message.makeMessage());
+                            };
+                            Platform.runLater(updater);
+                        }
+                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
+                    }else{
+                        scrollThread.interrupt();
+                    }
+                }
+            } catch (InterruptedException e) {
+                //we need this because when a sleep the interrupt from outside throws an exception
+                Thread.currentThread().interrupt();
+            }
+        }
+
+    }
+
     public class ExponentialRegressionScrollThread implements Runnable{
 
         double startTime;
@@ -556,6 +645,9 @@ public class ScrollController extends Controller{
                         double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
                         //System.out.println("Friction = " + Math.exp ( -2.006 * (deltaT/1000)));
                         double init_mm = toMM(speed_init);
+                        // speed_init == px/ms -> to convert to mm/sec? todo
+                       // double init_mm = toMM(speed_init) / 1000; // v in mm/sec -> much worse !
+
                         //580.31 e^(-2.006x) (mm / sec) -> ms div 1000 -> sec
                         double delta_mm = Math.abs (init_mm) * Math.exp ( -2.006 * (deltaT/1000) );
                         double deltaPx = Math.max(0, toPx(delta_mm));
