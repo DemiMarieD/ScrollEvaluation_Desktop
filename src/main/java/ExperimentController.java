@@ -11,7 +11,8 @@ import java.io.IOException;
 
 public class ExperimentController extends Controller {
 
-
+    @FXML
+    private TextField blocksField;
     @FXML
     private TextField idField;
     @FXML
@@ -63,6 +64,7 @@ public class ExperimentController extends Controller {
         }
 
         getData().setParticipantID(Integer.parseInt(idField.getText()));
+        getData().setNumberOfBlocks(Integer.parseInt(blocksField.getText()));
 
         goToView("RichTextView.fxml");
     }

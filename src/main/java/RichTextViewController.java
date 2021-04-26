@@ -24,12 +24,15 @@ import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
 import java.io.*;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.function.IntFunction;
 
 public class RichTextViewController extends ScrollController {
     final int scrollBarWidth = 20; //px
+    final List<Integer> DISTANCES = Arrays.asList(20, 60, 100, 140, 180, 220);
+    final List<Integer> FRAMESIZES = Arrays.asList(6);
+    final int UP = -1;
+    final int DOWN = 1;
 
     @FXML
     private RadioButton maxSpeedButton;
@@ -49,12 +52,20 @@ public class RichTextViewController extends ScrollController {
     private ScrollPane scrollPane_parent;
 
     //For Framing Task
+    private List<int[]> possibleCombinations;
+    private final int index_distance = 0;
+    private final int index_direction = 1;
+    private final int index_frame = 2;
+    private int blockNumber;
+    private int maxBlocks;
+    private boolean finished;
+    private int trialInBlock;
     private Trial currentTrial;
     // private long startTime;
     private int targetIndex;
     private int targetNumber;
     private int distance; //in number of lines
-    private double frameSize; // in number of lines
+    private int frameSize; // in number of lines
     private String direction;
     private boolean scrollStarted;
     private boolean targetVisible;
@@ -83,6 +94,7 @@ public class RichTextViewController extends ScrollController {
         });
 
 
+
         maxSpeedButton.setSelected(false);
         setMaxSpeedSet(maxSpeedButton.isSelected());
         maxSpeedButton.selectedProperty().addListener(new ChangeListener<Boolean>() {
@@ -96,9 +108,11 @@ public class RichTextViewController extends ScrollController {
         wrongPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/wrong.wav").toURI().toString()));
         rightPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/success.wav").toURI().toString()));
         //default values
+        possibleCombinations = new ArrayList<>();
+        maxBlocks = getData().getNumberOfBlocks(); // todo get from data?
+        finished = false;
+        blockNumber = 0;
         targetNumber = 0;
-        frameSize = 6;
-        distance = 60;
 
         setUpScrollPane();
 
@@ -110,6 +124,7 @@ public class RichTextViewController extends ScrollController {
                //on set up it also scrolls so we need to check that currentTrial is already defined
                 if(currentTrial != null) {
                     if (!scrollStarted) {
+                        //TODO BUG if not scrolling still time is taken!!
                         currentTrial.setTime_scrollStart(System.currentTimeMillis());
                         scrollStarted = true;
                     } else {
@@ -149,6 +164,8 @@ public class RichTextViewController extends ScrollController {
 
         Platform.runLater(() -> {
             setUpPanesAndTarget();
+            //will scroll to start
+            setTrial();
             getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
         });
     }
@@ -242,7 +259,7 @@ public class RichTextViewController extends ScrollController {
 
         Platform.runLater(() -> {
             addLineNumbers();
-            setTarget();
+            //needed to recognize when bottom is reached
             setMaxScrollVal();
             topPane.setVisible(false);
         });
@@ -253,7 +270,7 @@ public class RichTextViewController extends ScrollController {
         Platform.runLater(() -> {
             getScrollPane().scrollYToPixel(getScrollContentHeight());
             maxScrollVal = getScrollPane().estimatedScrollYProperty().getValue();
-            getScrollPane().scrollYToPixel(0);
+            scrollToStart();
         });
     }
 
@@ -272,74 +289,89 @@ public class RichTextViewController extends ScrollController {
         textArea.setPadding(new Insets(0,0,0,0));
     }
 
+    public void setTrial() {
+        if(possibleCombinations.size() == 0){
+            if(blockNumber < maxBlocks){
+                //ToDO BREAK
+                System.out.println("__________ Block finished! Take a Break _________");
 
-    //Updates Target Highlight, Indicator position and Frame size + Colors
-    public void setTarget() {
-        //** Set Target
-        targetNumber++;
+                blockNumber++;
+                setParametersForBlock();
+            }else{
+                //ToDO END
+                System.out.println("__________ END _________");
 
-        setUpTask();
+                //finished
+                finished = true;
+            }
 
-        scrollStarted = false;
-        targetVisible = isVisible();
-        targetInFrame = isInFrame();
+        }
 
-        currentTrial = new Trial(getData().getParticipantID(), targetNumber, targetIndex, frameSize, distance, System.currentTimeMillis(), direction, getData().getDevice());
-        currentTrial.setMode(getData().getMode());
-        currentTrial.setLineHeight(getLineHeight());
+        if(!finished) {
+            trialInBlock++;
+            targetNumber++;
+            Random random = new Random();
 
+            int randomIndex = random.nextInt(possibleCombinations.size());
+            int[] parameters = possibleCombinations.get(randomIndex);
+            possibleCombinations.remove(randomIndex);
+
+            frameSize = parameters[index_frame];
+            updateFrameHeight();
+
+            distance = parameters[index_distance];
+            int d = parameters[index_direction];
+
+            if(d == UP) {
+                direction = "UP";
+                setTarget("UP");
+            }else if(d == DOWN) {
+                direction = "DOWN";
+                setTarget("DOWN");
+            }
+
+            scrollToStart();
+
+            currentTrial = new Trial(getData().getParticipantID(), targetNumber, trialInBlock, blockNumber, targetIndex, frameSize, distance, direction, getData().getDevice());
+            currentTrial.setMode(getData().getMode());
+            currentTrial.setLineHeight(getLineHeight());
+
+            Platform.runLater(() -> {
+                currentTrial.setTime_trialStart(System.currentTimeMillis());
+                targetVisible = isVisible();
+                targetInFrame = isInFrame();
+                scrollStarted = false;
+            });
+        }
     }
 
-    public void setUpTask(){
-        InlineCssTextArea textArea = getTextArea();
-        // first target random ?!
-        if(targetNumber == 1){
-            targetIndex = getRandomValidTargetIndex();
-            direction = "DOWN";
-
-            //highlight target
-            int l = textArea.getParagraphLength(targetIndex);
-            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
-
-            //random frame size
-            // frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
-            updateFrameHeight();
-
-            frame.setStyle("-fx-background-color: red");
-            indicator.setStyle("-fx-background-color: #efc8c8");
-
-            // second (and all other even trials) UP a random distance
-        } else if(targetNumber % 2 == 0) {
-            //set NEW distance
-            //  distance = Distances.get(random.nextInt(Distances.size()));
-            direction = "UP";
-            //scroll UP
-            targetIndex = targetIndex-distance;
-
-            //highlight target
-            int l = textArea.getParagraphLength(targetIndex);
-            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: blue;");
-
-            frame.setStyle("-fx-background-color: blue");
-            indicator.setStyle("-fx-background-color: #c0c0f1");
-
-
-            //third (and all other uneven trials) DOWN the same distance BUT Update framesize
-        }else{
-            //scroll DOWN
-            targetIndex = targetIndex+distance;
-            direction = "DOWN";
-            //highlight target
-            int l = textArea.getParagraphLength(targetIndex);
-            textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
-
-            //new random frame size
-            //frameSize = FrameSizes.get(random.nextInt(FrameSizes.size()));
-            updateFrameHeight();
-
-            frame.setStyle("-fx-background-color: red");
-            indicator.setStyle("-fx-background-color: #efc8c8");
+    public void setParametersForBlock(){
+        trialInBlock = 0;
+        possibleCombinations = new ArrayList<>();
+        for(int d : DISTANCES){
+            for(int f : FRAMESIZES){
+                int[] combiUp = new int[]{d, UP, f};
+                possibleCombinations.add(combiUp);
+                int[] combiDown = new int[]{d, DOWN, f};
+                possibleCombinations.add(combiDown);
+            }
         }
+    }
+
+    //Updates Target Highlight, Indicator position and Frame size + Colors
+    public void setTarget(String direction){
+
+        InlineCssTextArea textArea = getTextArea();
+
+        //** Special case first target
+        targetIndex = getRandomValidTargetIndex(frameSize, distance);
+
+        //highlight target
+        int l = textArea.getParagraphLength(targetIndex);
+        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+
+        frame.setStyle("-fx-background-color: red");
+        indicator.setStyle("-fx-background-color: #efc8c8");
 
         //** Set Target indicator
         double minY = scrollPane_parent.getBoundsInParent().getMinY();
@@ -355,27 +387,40 @@ public class RichTextViewController extends ScrollController {
 
     }
 
-    private int getRandomValidTargetIndex() {
+    public void scrollToStart(){
+        if (direction.equals("UP")) {
+            int startPoint = targetIndex + distance;
+            scrollToLine(startPoint);
+
+        } else {
+            int startPoint = targetIndex - distance;
+            scrollToLine(startPoint);
+        }
+
+    }
+
+    private int getRandomValidTargetIndex(int frameSize, int distance) {
         Random random = new Random();
         InlineCssTextArea textArea = getTextArea();
         int totalNumberOfLines = textArea.getParagraphs().size();
+        System.out.println("Number of lines: " + totalNumberOfLines);
 
         //!! minus lines that can be reached outside the smallest frame
         Text t = (Text) textArea.lookup(".text");
         double lineHeight = t.getBoundsInLocal().getHeight();
         long visibleLines = Math.round(textArea.getHeight() / lineHeight);
-        System.out.println("Visible Lines: " + visibleLines);
-        //assuming the lists are ordered by size!
-        // int minFramesize = FrameSizes.get(0);
-        int minFramesize = (int) frameSize;
-        int nonReachableLines = (int) (visibleLines - minFramesize);
-        //  int maxDistance = Distances.get(Distances.size()-1);
-        int maxDistance = (int) distance;
-        int min = nonReachableLines/2 + maxDistance;
-        int max = totalNumberOfLines - (nonReachableLines/2) - maxDistance;
-        targetIndex = min + random.nextInt(max-min);
+        int nonReachableLines = (int) (visibleLines - frameSize);
+        int boarder = nonReachableLines/2;
 
-        return targetIndex;
+        int usableLines = totalNumberOfLines - nonReachableLines - distance;
+        int randIndex = boarder + random.nextInt(usableLines);
+        //if down then start must be positioned above thats why we need +distance space
+        if(direction.equals("DOWN")){
+            randIndex += distance;
+        }
+
+        return randIndex;
+
     }
 
     public void updateFrameHeight(){
@@ -396,12 +441,14 @@ public class RichTextViewController extends ScrollController {
         stopSounds();
         currentTrial.setTime_trialEnd(System.currentTimeMillis());
 
-
         if(isInFrame()){
             rightPlayer.play();
             currentTrial.setHit(true);
         }else{
-            missedTarget();
+            wrongPlayer.play();
+            currentTrial.setHit(false);
+            //todo get delta lines that the target was missed by!
+           // scrollToLine(targetIndex); -> setTarget will scroll to new start position
         }
 
         //write all data
@@ -411,30 +458,23 @@ public class RichTextViewController extends ScrollController {
         InlineCssTextArea textArea = getTextArea();
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
-        setTarget();
+        setTrial();
     }
 
-    public void missedTarget(){
-        wrongPlayer.play();
-        currentTrial.setHit(false);
-
-        //todo get delta lines that the target was missed by!
-
+    public void scrollToLine(int line){
         //Centering (old) target in screen so the scrolling distance is constant !
-        int firstLineToBeVisible = targetIndex - (getNumberOfVisibleLines()/2);
+        int firstLineToBeVisible = line - (getNumberOfVisibleLines()/2);
         int absPositionTarget;
         Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(firstLineToBeVisible);
         //if first line is already visible -> target is too far south -> scroll to last line
         if(bounds.isEmpty()) {
             absPositionTarget = getTextArea().getAbsolutePosition(firstLineToBeVisible, 0);
         }else{
-            int lastLineToBeVisible = targetIndex + (getNumberOfVisibleLines()/2);
+            int lastLineToBeVisible = line + (getNumberOfVisibleLines()/2);
             absPositionTarget = getTextArea().getAbsolutePosition(lastLineToBeVisible, 0);
         }
         getTextArea().moveTo(absPositionTarget);
         getTextArea().requestFollowCaret();
-
-
     }
 
     public void stopSounds(){
@@ -454,7 +494,7 @@ public class RichTextViewController extends ScrollController {
         InlineCssTextArea textArea = getTextArea();
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
-        setTarget();
+        setTrial();
     }
 
     public void clickedBack(ActionEvent actionEvent) throws IOException {

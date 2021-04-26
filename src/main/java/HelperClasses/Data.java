@@ -5,6 +5,15 @@ public class Data {
     private ScrollingMode mode;
 
     private int participantID;
+    private int numberOfBlocks;
+
+    public int getNumberOfBlocks() {
+        return numberOfBlocks;
+    }
+
+    public void setNumberOfBlocks(int numberOfBlocks) {
+        this.numberOfBlocks = numberOfBlocks;
+    }
 
     public int getParticipantID() {
         return participantID;

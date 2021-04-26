@@ -4,6 +4,8 @@ public class Trial {
 
     int participantID;
     int trialNumber;
+    int trialInBlock;
+    int block;
     double frameHeight;
     int targetLine;
     int distance;
@@ -22,7 +24,7 @@ public class Trial {
     boolean hit;
 
 
-    public Trial(int participantID, int trialNumber, int targetLine, double frameHeight, int distance, long time_trialStart, String direction, Device device) {
+    public Trial(int participantID, int trialNumber, int trialInBlock, int block,  int targetLine, double frameHeight, int distance, String direction, Device device) {
         this.participantID = participantID;
         this.trialNumber = trialNumber;
         this.frameHeight = frameHeight;
@@ -31,6 +33,8 @@ public class Trial {
         this.direction = direction;
         this.targetLine = targetLine;
         this.device = device;
+        this.trialInBlock = trialInBlock;
+        this.block = block;
 
         targetInFrame_counter = 0;
         targetVisible_counter = 0;
@@ -44,6 +48,7 @@ public class Trial {
         //TODO !
 
         System.out.println(toString());
+        System.out.println("D: "+ distance + " - " + direction);
 
         long deltaTime_total = time_trialEnd - time_trialStart;
         long deltaTime_scroll = time_scrollEnd - time_scrollStart;
@@ -87,6 +92,9 @@ public class Trial {
         targetVisible_counter++;
     }
 
+    public void setTime_trialStart(long time_trialStart) {
+        this.time_trialStart = time_trialStart;
+    }
 
     public void setTime_trialEnd(long time_trialEnd) {
         this.time_trialEnd = time_trialEnd;
