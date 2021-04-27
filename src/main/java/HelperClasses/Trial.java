@@ -1,6 +1,13 @@
 package HelperClasses;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 public class Trial {
+
+    BufferedWriter writer;
 
     int participantID;
     int trialNumber;
@@ -23,13 +30,14 @@ public class Trial {
     int targetVisible_counter;
     boolean hit;
 
+    //todo: add distance to trial on error !
+
 
     public Trial(int participantID, int trialNumber, int trialInBlock, int block,  int targetLine, double frameHeight, int distance, String direction, Device device) {
         this.participantID = participantID;
         this.trialNumber = trialNumber;
         this.frameHeight = frameHeight;
         this.distance = distance;
-        this.time_trialStart = time_trialStart;
         this.direction = direction;
         this.targetLine = targetLine;
         this.device = device;
@@ -38,6 +46,29 @@ public class Trial {
 
         targetInFrame_counter = 0;
         targetVisible_counter = 0;
+
+
+        try {
+
+            String path = "MooseScrolling_Data" + participantID + ".txt"; //saved in storage on the phone
+            File file = new File(path);
+            Boolean isNew = !file.exists();
+            writer = new BufferedWriter(new FileWriter(file, true));
+            if(isNew){
+                String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, " +
+                        "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
+                        "(T) Start Scroll, #Target in frame, #Target visible  \n";
+                writer.write(text);
+                writer.flush();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+          }
+
+
+
     }
 
     public void setMode(ScrollingMode mode) {
@@ -45,44 +76,48 @@ public class Trial {
     }
 
     public void writeTrial(){
-        //TODO !
 
-        System.out.println(toString());
-        System.out.println("D: "+ distance + " - " + direction);
+        System.out.println("Trial: " + trialNumber + ", Block: " + block +  ", -- D: "+ distance + " - " + direction);
 
+        //todo Bug not correct times!
         long deltaTime_total = time_trialEnd - time_trialStart;
         long deltaTime_scroll = time_scrollEnd - time_scrollStart;
         long deltaTime_startScroll = time_scrollStart - time_trialStart;
         long deltaTime_select = time_trialEnd - time_scrollEnd;
         System.out.print( " - total " + deltaTime_total + " - scroll " + deltaTime_scroll + " - start " + deltaTime_startScroll + " - select " + deltaTime_select );
 
+        long deltaTime_fineTune = 0;
         if(targetVisible_counter > 0){
-            long deltaTime_fineTune = time_scrollEnd - time_lastVisible;
+            deltaTime_fineTune = time_scrollEnd - time_lastVisible;
             System.out.println( " - fine tune " + deltaTime_fineTune);
         }
+        System.out.println("\n");
 
-    }
+        //  "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, Direction, " +
+        //  "Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, (T) Start Scroll\n";
+        String data = "";
+        if(device == Device.MOOSE) {
+            data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," +
+                    frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
+                    deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," +
+                    targetInFrame_counter + "," + targetVisible_counter + "\n";
+        }else{
+            data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," +
+                    frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
+                    deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," +
+                    targetInFrame_counter + "," + targetVisible_counter + "\n";
+        }
 
-    @Override
-    public String toString() {
-        return "Trial{" +
-                "participantID=" + participantID +
-                ", trialNumber=" + trialNumber +
-                ", frameHeight=" + frameHeight +
-                ", targetLine=" + targetLine +
-                ", distance=" + distance +
-                ", direction='" + direction + '\'' +
-                ", device=" + device.name() +
-                ", time_trialStart=" + time_trialStart +
-                ", lineHeight=" + lineHeight +
-                ", time_trialEnd=" + time_trialEnd +
-                ", time_scrollStart=" + time_scrollStart +
-                ", time_scrollEnd=" + time_scrollEnd +
-                ", #Target_visible=" + targetVisible_counter +
-                ", #Target_inFrame=" + targetInFrame_counter +
-                ", hit=" + hit +
-                '}';
-        //mode is ignored because optional as it depends on device
+        try {
+            writer.write(data);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
     }
 
     public void targetInFrame(){

@@ -17,8 +17,8 @@
       <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="150.0" text="&lt; Back" />
       <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="259.0" layoutY="227.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
         <ComboBox fx:id="cb" layoutX="337.0" layoutY="267.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
-        <TextField fx:id="idField" layoutX="367.0" layoutY="308.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
-        <TextField fx:id="blocksField" layoutX="367.0" layoutY="340.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="2" />
+        <TextField fx:id="idField" layoutX="400.0" layoutY="308.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
+        <TextField fx:id="blocksField" layoutX="400.0" layoutY="340.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="2" />
       <Label layoutX="337.0" layoutY="312.0" prefHeight="17.0" prefWidth="60.0" text="Id:" />
         <Label layoutX="337.0" layoutY="344.0" prefHeight="17.0" prefWidth="60.0" text="#Blocks:" />
     </children>

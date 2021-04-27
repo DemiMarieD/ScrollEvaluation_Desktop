@@ -20,7 +20,8 @@
       <ComboBox fx:id="cb" layoutX="24.0" layoutY="31.0" prefWidth="150.0" promptText="Select Mode..." />
       <Pane fx:id="topPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: white;">
          <children>
-            <ProgressIndicator layoutX="424.0" layoutY="300.0" BorderPane.alignment="CENTER" />
+            <ProgressIndicator fx:id="loadIndicator" layoutX="424.0" layoutY="300.0" BorderPane.alignment="CENTER" />
+             <Label fx:id="topPaneLabel" layoutX="424.0" layoutY="200.0" text="Setting up..." />
          </children></Pane>
     </children>
     <stylesheets>

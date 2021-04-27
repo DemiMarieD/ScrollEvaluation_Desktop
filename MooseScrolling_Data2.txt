@@ -1,0 +1,3 @@
+ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, Direction, Target Line, Line Height, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, (T) Start Scroll  
+2,MOUSE, --- ,1,1,1,6.0,20,UP,264,0.0,3443,2653,842,777,13
+2,MOUSE, --- ,2,1,2,6.0,140,DOWN,238,0.0,3294,3057,0,210,27

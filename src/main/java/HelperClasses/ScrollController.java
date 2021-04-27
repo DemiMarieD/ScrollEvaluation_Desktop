@@ -37,14 +37,14 @@ public class ScrollController extends Controller{
     private boolean maxSpeedSet;
     private final double MAX_SPEED = 2.1; // px/ms
 
-    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.DRAG,
-            ScrollingMode.DRAG_acceleration, ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
-            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS, ScrollingMode.FLICK_iOS_2,
-            ScrollingMode.RATE_BASED, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
-            ScrollingMode.WHEEL, ScrollingMode.THUMB));
+    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.WHEEL,
+            ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
+            ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
+            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS, ScrollingMode.FLICK_iOS_2, ScrollingMode.FLICK1000,
+            ScrollingMode.RATE_BASED));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Drag", "Drag + Accel.", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS - Demi", "iOS (2)", "Rate-Based", "Circle", "Rubbing",  "Wheel", "Thumb"));
+            "Wheel", "Drag", "Drag + Accel.", "Circle", "Rubbing", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS - Demi", "iOS (2)", "Flick 1000", "Rate-Based"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -78,10 +78,9 @@ public class ScrollController extends Controller{
         }
     }
 
-    public double getLineHeight() {
+    public void setLineHeight() {
         Text t = (Text) textArea.lookup(".text");
         lineHeight = t.getBoundsInLocal().getHeight();
-        return lineHeight;
     }
 
     public double getScrollContentHeight() {
@@ -90,7 +89,7 @@ public class ScrollController extends Controller{
 
     public void setScrollContentHeight() {
         int totalNumberOfLines = textArea.getParagraphs().size();
-        scrollContentHeight = totalNumberOfLines * getLineHeight();
+        scrollContentHeight = totalNumberOfLines * lineHeight;
     }
 
     public int getNumberOfVisibleLines(){
@@ -289,6 +288,7 @@ public class ScrollController extends Controller{
                     }
 
                     break;
+                case "Flick1000":
                 case "iOS":
                     switch (m.getActionName()) {
                         case "deltaY":
@@ -583,7 +583,7 @@ public class ScrollController extends Controller{
         boolean end = false;
         public ExponentialRegression_2_ScrollThread(double speed){
             this.speed_init = speed;
-            this.startTime = System.currentTimeMillis(); // + 500ms as for 0.5se the speed should stay same
+            this.startTime = System.currentTimeMillis() + 500; // + 500ms as for 0.5se the speed should stay same
         }
         @Override
         public void run() {
