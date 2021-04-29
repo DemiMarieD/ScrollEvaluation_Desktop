@@ -1,6 +1,5 @@
 .scrollArea, .scrollArea >* {
     -fx-background-color: transparent !important;
-    -fx-highlight-fill: transparent !important;
 }
 
 .scrollArea .scroll-bar:vertical {
