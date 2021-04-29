@@ -8,6 +8,8 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ExperimentController extends Controller {
 
@@ -21,8 +23,12 @@ public class ExperimentController extends Controller {
     @FXML
     private ComboBox cb;
 
-    private ScrollingMode[] modes = new ScrollingMode[]{ScrollingMode.DRAG, ScrollingMode.FLICK, ScrollingMode.RATE_BASED,
-            ScrollingMode.CIRCLE, ScrollingMode.RUBBING, null, ScrollingMode.WHEEL, ScrollingMode.DRAG_acceleration, ScrollingMode.THUMB};
+    private ScrollingMode[] modes = new ScrollingMode[]{ ScrollingMode.WHEEL,
+            ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
+            ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
+            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS, ScrollingMode.FLICK_iOS_2, ScrollingMode.FLICK1000,
+            ScrollingMode.RATE_BASED};
+
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -32,8 +38,8 @@ public class ExperimentController extends Controller {
         if(getData().getDevice() == Device.MOOSE){
             getCommunicator().changeController(this);
             cb.setVisible(true);
-            cb.setItems(FXCollections.observableArrayList(
-                    "Drag", "Flick", "Rate-Based", "Circle", "Rubbing", new Separator(), "Wheel", "Drag with Acceleration", "Thumb")
+            cb.setItems(FXCollections.observableArrayList("Wheel", "Drag", "Drag + Accel.", "Circle", "Rubbing",
+                    "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS - Demi", "iOS (2)", "Flick 1000", "Rate-Based")
             ); //new Separator(), can also be added
         }
 

@@ -25,6 +25,8 @@ public class Trial {
     long time_scrollStart;
     long time_scrollEnd;
     long time_lastVisible;
+    int distanceFromMiddle;
+
 
     int targetInFrame_counter;
     int targetVisible_counter;
@@ -57,7 +59,7 @@ public class Trial {
             if(isNew){
                 String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, " +
                         "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
-                        "(T) Start Scroll, #Target in frame, #Target visible  \n";
+                        "(T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible  \n";
                 writer.write(text);
                 writer.flush();
             }
@@ -99,12 +101,12 @@ public class Trial {
         if(device == Device.MOOSE) {
             data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
-                    deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," +
+                    deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter + "\n";
         }else{
             data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
-                    deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," +
+                    deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter + "\n";
         }
 
@@ -125,6 +127,9 @@ public class Trial {
     }
     public void targetVisible(){
         targetVisible_counter++;
+    }
+    public void setDistanceFromMiddle(int distanceFromMiddle) {
+        this.distanceFromMiddle = distanceFromMiddle;
     }
 
     public void setTime_trialStart(long time_trialStart) {

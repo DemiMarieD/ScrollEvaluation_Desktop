@@ -26,6 +26,8 @@ import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.model.Paragraph;
+import org.reactfx.collection.LiveList;
 
 import java.io.*;
 import java.util.*;
@@ -34,7 +36,7 @@ import java.util.function.IntFunction;
 public class RichTextViewController extends ScrollController {
     final int scrollBarWidth = 20; //px
     final List<Integer> DISTANCES = Arrays.asList(20, 60, 100, 140, 180, 220);
-    final List<Integer> FRAMESIZES = Arrays.asList(6);
+    final List<Integer> FRAMESIZES = Arrays.asList(5);
     final int UP = -1;
     final int DOWN = 1;
 
@@ -283,7 +285,7 @@ public class RichTextViewController extends ScrollController {
         indicator.setLayoutX(scrollPane_parent.getBoundsInParent().getMaxX() - scrollBarWidth );
        // indicator.setLayoutY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() / 2));
         Text t = (Text) textArea.lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
+        lineHeight = t.getBoundsInLocal().getHeight();
         int totalNumberOfLines = textArea.getParagraphs().size();
         double scrollContentHeight = totalNumberOfLines*lineHeight;
         double indicatorHeight = scrollContentHeight/scrollPane_parent.getHeight();
@@ -375,6 +377,7 @@ public class RichTextViewController extends ScrollController {
             });
             new Thread(scroller).start(); */
             scrollToStart(); //should do the setUp of
+            //todo test sleep here!
             initTrial();
             //todo its still scrolling after
 
@@ -506,7 +509,7 @@ public class RichTextViewController extends ScrollController {
 
         //!! minus lines that can be reached outside the smallest frame
         Text t = (Text) textArea.lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
+       // double lineHeight = t.getBoundsInLocal().getHeight();
         long visibleLines = Math.round(textArea.getHeight() / lineHeight);
         int nonReachableLines = (int) (visibleLines - frameSize);
         int boarder = nonReachableLines/2;
@@ -523,8 +526,8 @@ public class RichTextViewController extends ScrollController {
     }
 
     public void updateFrameHeight(){
-        Text t = (Text) getTextArea().lookup(".text");
-        double lineHeight = t.getBoundsInLocal().getHeight();
+      //  Text t = (Text) getTextArea().lookup(".text");
+      //  double lineHeight = t.getBoundsInLocal().getHeight();
         double frameSize_px = frameSize * lineHeight;
 
       // double frameSize_px = toPx(frameSize);
@@ -540,6 +543,14 @@ public class RichTextViewController extends ScrollController {
         stopSounds();
         currentTrial.setTime_scrollEnd(lastScrollTime);
         currentTrial.setTime_trialEnd(System.currentTimeMillis());
+
+        int middleIndex = (int) Math.round(getTextArea().getHeight()/lineHeight) / 2;
+        int middleLine = getTextArea().visibleParToAllParIndex(middleIndex-1);
+       // System.out.println("Middle Line = " + (middleLine+1));
+        int deltaLines = targetIndex - middleLine;
+        currentTrial.setDistanceFromMiddle(deltaLines);
+       // System.out.println("Delta Lines = " + deltaLines);
+
 
         if(isInFrame()){
             rightPlayer.play();
@@ -563,6 +574,8 @@ public class RichTextViewController extends ScrollController {
         setTrial();
 
     }
+
+
 
     /*
     public void scrollToLine(int line){
