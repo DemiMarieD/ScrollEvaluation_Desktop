@@ -59,12 +59,13 @@ public class ScrollController extends Controller{
     public void setComboBox(ComboBox comboBox) {
         this.comboBox = comboBox;
         if(getData().getDevice() == Device.MOOSE){
+            this.comboBox.setVisible(true);
             if(getData().getMode() != null) {
                 String item = list.get(modes.indexOf(getData().getMode()));
-                comboBox.setValue(item);
+                this.comboBox.setValue(item);
             }
-            comboBox.setItems(FXCollections.observableArrayList(list));
-            comboBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            this.comboBox.setItems(FXCollections.observableArrayList(list));
+            this.comboBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
                 @Override
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     getData().setMode(modes.get(newValue.intValue()));
@@ -74,7 +75,7 @@ public class ScrollController extends Controller{
                 }
             });
         }else{
-            comboBox.setVisible(false);
+            this.comboBox.setVisible(false);
         }
     }
 

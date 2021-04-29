@@ -2,21 +2,17 @@ import HelperClasses.*;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Task;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.event.*;
 import javafx.fxml.FXML;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
@@ -26,11 +22,11 @@ import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.InlineCssTextArea;
 import org.fxmisc.richtext.LineNumberFactory;
-import org.fxmisc.richtext.model.Paragraph;
-import org.reactfx.collection.LiveList;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.IntFunction;
 
 public class RichTextViewController extends ScrollController {
@@ -49,7 +45,7 @@ public class RichTextViewController extends ScrollController {
     private  Label topPaneLabel;
 
     @FXML
-    private ComboBox cb;
+    private ComboBox modeSelector;
 
     @FXML
     private Pane topPane;
@@ -93,7 +89,7 @@ public class RichTextViewController extends ScrollController {
     public void initData(Communicator communicator, Data data) {
         super.initData(communicator, data);
 
-        setComboBox(cb);
+        setComboBox(modeSelector);
 
         if(getData().getDevice() == Device.MOOSE) {
             setController(this);
@@ -111,7 +107,7 @@ public class RichTextViewController extends ScrollController {
                 }else if(breakSet) {
                     topPane.setVisible(false);
                     breakSet = false;
-                    getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
+                    //getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
                     initTrial();
 
                 }else {
@@ -558,8 +554,6 @@ public class RichTextViewController extends ScrollController {
         }else{
             wrongPlayer.play();
             currentTrial.setHit(false);
-            //todo get delta lines that the target was missed by!
-           // scrollToLine(targetIndex); -> setTarget will scroll to new start position
         }
 
         //write all data
@@ -571,6 +565,7 @@ public class RichTextViewController extends ScrollController {
         InlineCssTextArea textArea = getTextArea();
         int l = textArea.getParagraphLength(targetIndex);
         textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
+        //set new trial
         setTrial();
 
     }
@@ -651,4 +646,22 @@ public class RichTextViewController extends ScrollController {
     }
 
 
+    @Override
+    public void incomingMessage(String message) {
+        super.incomingMessage(message);
+        Message m = new Message(message);
+        if(m.getActionType().equals("Action")){
+            if (m.getActionName().equals("click")) {
+                try {
+                    Robot robot = new Robot();
+                    robot.mousePress(16);
+                    robot.mouseRelease(16);
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+    }
 }
