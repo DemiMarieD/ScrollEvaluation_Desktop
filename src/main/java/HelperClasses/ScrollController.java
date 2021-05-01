@@ -4,11 +4,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -34,17 +30,15 @@ public class ScrollController extends Controller{
     private double scrollContentHeight;
     private double lineHeight;
 
-    private boolean maxSpeedSet;
-    private final double MAX_SPEED = 2.1; // px/ms
+
+    private Trial trial;
 
     private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.WHEEL,
-            ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
-            ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
-            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS, ScrollingMode.FLICK_iOS_2, ScrollingMode.FLICK1000,
-            ScrollingMode.RATE_BASED));
+            ScrollingMode.DRAG, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, ScrollingMode.FLICK_deceleration,
+            ScrollingMode.FLICK_iOS, ScrollingMode.RATE_BASED));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Wheel", "Drag", "Drag + Accel.", "Circle", "Rubbing", "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS - Demi", "iOS (2)", "Flick 1000", "Rate-Based"));
+            "Wheel", "Drag", "Circle", "Rubbing", "Flick Decelerate", "iOS - Demi", "Rate-Based"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -142,12 +136,8 @@ public class ScrollController extends Controller{
         return content;
     }
 
-    public boolean getMaxSpeedSet() {
-        return maxSpeedSet;
-    }
-
-    public void setMaxSpeedSet(boolean maxSpeedSet) {
-        this.maxSpeedSet = maxSpeedSet;
+    public void setTrial(Trial trial) {
+        this.trial = trial;
     }
 
     // Incoming Messages from Moose for scrolling
@@ -162,9 +152,7 @@ public class ScrollController extends Controller{
 
             //----- Normal Drag or Rubbing
             switch (m.getActionType()) {
-                case "Scroll":
                 case "Rubbing":
-                case "DragAcceleration":
                 case "Drag":
                     if (m.getActionName().equals("deltaY")) {
                         double deltaY = Double.parseDouble(m.getValue()); //should be a px value
@@ -172,124 +160,10 @@ public class ScrollController extends Controller{
                             scrollPane.scrollYBy(deltaY);
                         }
                     }
-
-
                     break;
 
-                // Dragging the thumb
-                case "Thumb":
-                    if (m.getActionName().equals("deltaY")) {
-                        double deltaY_Thumb = Double.parseDouble(m.getValue()); //should be a px value
 
-                        // System.out.println(" Unit de/increment " + scrollBar.getUnitIncrement() ); // == 0 ..
-                        // System.out.println(" Block de/increment " + scrollBar.getBlockIncrement() );
-                        // Paging = Block Increment/Decrement
-
-                        ScrollBar scrollBar = (ScrollBar) scrollPane.lookup(".scroll-bar:vertical");
-                        double visibleAmount = scrollBar.getVisibleAmount(); //size of page px
-                        //System.out.println("Visible Amount " + visibleAmount);
-                        //System.out.println("Height of Pane " + scrollPane.getHeight());
-
-                        double deltaY = (deltaY_Thumb / visibleAmount) * scrollContentHeight; //scrollPane_parent.getHeight()
-
-                        if (scrollPane.isHover()) {
-                            scrollPane.scrollYBy(deltaY);
-                        }
-                    }
-
-                    break;
-
-                //----- Simple flick
-                case "Flick":
-                    switch (m.getActionName()) {
-                        case "deltaY":
-                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                            if (scrollPane.isHover()) {
-                                scrollPane.scrollYBy(deltaY);
-                            }
-
-                            break;
-                        case "speed":
-                            double pxPerMs = Double.parseDouble(m.getValue());
-                            if(maxSpeedSet){
-                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
-                            }
-                            if(!scrollThread.isInterrupted()){
-                                scrollThread.interrupt();
-                            }
-                            scrollThread = new Thread(new ScrollThread(1, pxPerMs));
-                            scrollThread.start();
-
-                            break;
-                        case "stop":
-                            scrollThread.interrupt();
-                            break;
-                    }
-
-
-
-                    break;
-
-                //----- Decelerating & nonAdditive flick
-                case "IPhoneFlick":
-                    switch (m.getActionName()) {
-                        case "deltaY":
-                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                            if (scrollPane.isHover()) {
-                                scrollPane.scrollYBy(deltaY);
-                            }
-
-                            break;
-                        case "speed":
-                            double pxPerMs = Double.parseDouble(m.getValue());
-                            if(maxSpeedSet){
-                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
-                            }
-                            if(scrollThread != null && !scrollThread.isInterrupted()){
-                                scrollThread.interrupt();
-                            }
-                            scrollThread = new Thread(new IPhoneScrollThread(pxPerMs));
-                            scrollThread.start();
-
-                            break;
-
-                        case "stop":
-                            scrollThread.interrupt();
-                            break;
-                    }
-
-                    break;
-
-                // ....
-                case "iOS2":
-                    switch (m.getActionName()) {
-                        case "deltaY":
-                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                            if (scrollPane.isHover()) {
-                                scrollPane.scrollYBy(deltaY);
-                            }
-
-                            break;
-                        case "speed":
-                            double pxPerMs = Double.parseDouble(m.getValue());
-                            if(maxSpeedSet){
-                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
-                            }
-                            if(scrollThread != null && !scrollThread.isInterrupted()){
-                                scrollThread.interrupt();
-                            }
-                            scrollThread = new Thread(new ExponentialRegressionScrollThread(pxPerMs));
-                            scrollThread.start();
-
-                            break;
-
-                        case "stop":
-                            scrollThread.interrupt();
-                            break;
-                    }
-
-                    break;
-                case "Flick1000":
+                // Slightly adjusted iOS flick
                 case "iOS":
                     switch (m.getActionName()) {
                         case "deltaY":
@@ -301,9 +175,6 @@ public class ScrollController extends Controller{
                             break;
                         case "speed":
                             double pxPerMs = Double.parseDouble(m.getValue());
-                            if(maxSpeedSet){
-                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
-                            }
                             if(scrollThread != null && !scrollThread.isInterrupted()){
                                 scrollThread.interrupt();
                             }
@@ -331,9 +202,6 @@ public class ScrollController extends Controller{
                             break;
                         case "speed":
                             double pxPerMs = Double.parseDouble(m.getValue());
-                            if(maxSpeedSet){
-                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
-                            }
                             scrollThread = new Thread(new DecScrollThread(pxPerMs));
                             scrollThread.start();
 
@@ -342,9 +210,6 @@ public class ScrollController extends Controller{
                         case "addSpeed":
                             double addPx = Double.parseDouble(m.getValue());
                             currentSpeed = currentSpeed + addPx;
-                            if(maxSpeedSet){
-                                currentSpeed = Math.min(MAX_SPEED, currentSpeed);
-                            }
                             scrollThread.interrupt();
                             scrollThread = new Thread(new DecScrollThread(currentSpeed));
                             scrollThread.start();
@@ -357,49 +222,6 @@ public class ScrollController extends Controller{
 
                     break;
 
-
-
-                //----- Multi flick - additive
-                case "MultiFlick":
-                    switch (m.getActionName()) {
-                        case "deltaY":
-                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-
-                            if (scrollPane.isHover()) {
-                                scrollPane.scrollYBy(deltaY);
-                            }
-
-                            break;
-                        case "speed":
-                            double pxPerMs = Double.parseDouble(m.getValue());
-                            if(maxSpeedSet){
-                                pxPerMs = Math.min(MAX_SPEED, pxPerMs);
-                            }
-                            currentSpeed = pxPerMs;
-                            scrollThread = new Thread(new ScrollThread(1, pxPerMs));
-                            scrollThread.start();
-
-                            break;
-
-                        case "addSpeed":
-                            double addPx = Double.parseDouble(m.getValue());
-                            currentSpeed = currentSpeed + addPx;
-                            if(maxSpeedSet){
-                                currentSpeed = Math.min(MAX_SPEED, currentSpeed);
-                            }
-                            scrollThread.interrupt();
-                            scrollThread = new Thread(new ScrollThread(1, currentSpeed));
-                            scrollThread.start();
-
-                            break;
-                        case "stop":
-                            scrollThread.interrupt();
-                            break;
-                    }
-
-
-
-                    break;
                 //----- Circle
                 case "Circle3":
                     if (m.getActionName().equals("deltaAngle")) {
@@ -408,8 +230,6 @@ public class ScrollController extends Controller{
                             scrollPane.scrollYBy(deltaY);
                         }
                     }
-
-
 
                     break;
 
@@ -423,17 +243,12 @@ public class ScrollController extends Controller{
                         }
 
                         double deltaY = Double.parseDouble(m.getValue()); //px
-                        if(maxSpeedSet){
-                            deltaY = Math.min(MAX_SPEED, deltaY);
-                        }
                         scrollThread = new Thread(new ScrollThread(1, deltaY));
                         scrollThread.start();
 
                     } else if (m.getActionName().equals("stop")) {
                         scrollThread.interrupt();
                     }
-
-
 
                     break;
 
@@ -446,12 +261,24 @@ public class ScrollController extends Controller{
                     break;
             }
 
-        }else if(m.getActionType().equals("Action")){
+        }else if(m.getActionType().equals("Action")) {
             if (m.getActionName().equals("click")) {
                 robot.mousePress(16);
                 robot.mouseRelease(16);
-
             }
+
+        } else if(m.getActionType().equals("Data")){
+                if (m.getActionName().equals("fingerCount")) {
+                    trial.setFingerCount(Double.parseDouble(m.getValue()));
+
+                }else if (m.getActionName().equals("minMax")) {
+                    //make look like: minX/minY,maxX/maxY
+                    String[] val = m.getValue().split(",");
+                    trial.setPosMin(val[0]);
+                    trial.setPosMax(val[1]);
+                    //assuming that this is send after finger count
+                    trial.writeTrial();
+                }
         } else {
             System.out.println("Mode and Action type are not same.");
         }
@@ -687,7 +514,6 @@ public class ScrollController extends Controller{
         // mm  * pixels/inch * inch/mm
         return (px * 25.4) / dpi;
     }
-
 
     public double toPx(double mm){
         // dpi = pixels/inch

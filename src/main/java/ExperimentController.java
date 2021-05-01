@@ -24,10 +24,8 @@ public class ExperimentController extends Controller {
     private ComboBox cb;
 
     private ScrollingMode[] modes = new ScrollingMode[]{ ScrollingMode.WHEEL,
-            ScrollingMode.DRAG, ScrollingMode.DRAG_acceleration, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
-            ScrollingMode.FLICK, ScrollingMode.FLICK_multi, ScrollingMode.FLICK_deceleration,
-            ScrollingMode.FLICK_iphone, ScrollingMode.FLICK_iOS, ScrollingMode.FLICK_iOS_2, ScrollingMode.FLICK1000,
-            ScrollingMode.RATE_BASED};
+            ScrollingMode.DRAG, null, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, ScrollingMode.FLICK_deceleration,
+            ScrollingMode.FLICK_iOS, ScrollingMode.RATE_BASED};
 
 
     @Override
@@ -38,8 +36,7 @@ public class ExperimentController extends Controller {
         if(getData().getDevice() == Device.MOOSE){
             getCommunicator().changeController(this);
             cb.setVisible(true);
-            cb.setItems(FXCollections.observableArrayList("Wheel", "Drag", "Drag + Accel.", "Circle", "Rubbing",
-                    "Flick",  "Multi Flick", "Flick Decelerate", "IPhone Flick", "iOS - Demi", "iOS (2)", "Flick 1000", "Rate-Based")
+            cb.setItems(FXCollections.observableArrayList("Wheel", "Drag", new Separator(), "Circle", "Rubbing", "Flick Decelerate", "iOS - Demi", "Rate-Based")
             ); //new Separator(), can also be added
         }
 

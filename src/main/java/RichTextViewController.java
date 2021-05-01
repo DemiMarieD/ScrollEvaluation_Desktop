@@ -31,8 +31,8 @@ import java.util.function.IntFunction;
 
 public class RichTextViewController extends ScrollController {
     final int scrollBarWidth = 20; //px
-    final List<Integer> DISTANCES = Arrays.asList(20, 60, 100, 140, 180, 220);
-    final List<Integer> FRAMESIZES = Arrays.asList(5);
+    final List<Integer> DISTANCES = Arrays.asList(20, 70, 120, 170, 220);
+    final List<Integer> FRAMESIZES = Arrays.asList(3, 6);
     final int UP = -1;
     final int DOWN = 1;
 
@@ -116,7 +116,6 @@ public class RichTextViewController extends ScrollController {
             }
         });
 
-        setMaxSpeedSet(false); //todo think about?!
 
         //Media new File(path).toURI().toString()
         wrongPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/wrong.wav").toURI().toString()));
@@ -132,6 +131,7 @@ public class RichTextViewController extends ScrollController {
 
 
         setUpScrollPane();
+
         getScrollPane().estimatedScrollYProperty().addListener(new ChangeListener<Double>() {
             @Override
             public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue) {
@@ -143,6 +143,11 @@ public class RichTextViewController extends ScrollController {
                         System.out.println(" ** Scroll started");
                         currentTrial.setTime_scrollStart(System.currentTimeMillis());
                         scrollStarted = true;
+                        if(oldValue> newValue) {
+                            currentTrial.setStartDirection("UP");
+                        }else{
+                            currentTrial.setStartDirection("DOWN");
+                        }
                     } else {
                         lastScrollTime = System.currentTimeMillis();
 
@@ -179,13 +184,13 @@ public class RichTextViewController extends ScrollController {
             }
         });
 
-
         Platform.runLater(() -> {
             setUpPanesAndTarget();
             addLineNumbers();
             setLineHeight();
             setMaxScrollVal();
-            Platform.runLater(this::setTrial);
+            //Platform.runLater(this::setTrial);
+            setTrial();
         });
 
 
@@ -374,6 +379,8 @@ public class RichTextViewController extends ScrollController {
             new Thread(scroller).start(); */
             scrollToStart(); //should do the setUp of
             //todo test sleep here!
+
+            //Platform.runLater(this::initTrial);
             initTrial();
             //todo its still scrolling after
 
@@ -404,10 +411,10 @@ public class RichTextViewController extends ScrollController {
 
         //highlight target
         int l = textArea.getParagraphLength(targetIndex);
-        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: red;");
+        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: #68c1f3;");
 
-        frame.setStyle("-fx-background-color: red");
-        indicator.setStyle("-fx-background-color: #efc8c8");
+        frame.setStyle("-fx-background-color: #68c1f3");
+        indicator.setStyle("-fx-background-color: #c8e1ef");
 
         //** Set Target indicator
         double minY = scrollPane_parent.getBoundsInParent().getMinY();
@@ -446,10 +453,9 @@ public class RichTextViewController extends ScrollController {
             int lastLineToBeVisible = startPoint + (getNumberOfVisibleLines()/2);
             absPositionTarget = getTextArea().getAbsolutePosition(lastLineToBeVisible, 0);
         }
-        Platform.runLater(() -> {
-            getTextArea().moveTo(absPositionTarget);
-            getTextArea().requestFollowCaret(); //todo figure out when this is finished
-        });
+
+        getTextArea().moveTo(absPositionTarget);
+        getTextArea().requestFollowCaret(); //todo figure out when this is finished
 
     }
 
@@ -537,6 +543,9 @@ public class RichTextViewController extends ScrollController {
 
     public void checkTarget(){
         stopSounds();
+        if(getScrollThread() != null && !getScrollThread().isInterrupted()){
+            getScrollThread().interrupt();
+        }
         currentTrial.setTime_scrollEnd(lastScrollTime);
         currentTrial.setTime_trialEnd(System.currentTimeMillis());
 
@@ -557,7 +566,16 @@ public class RichTextViewController extends ScrollController {
         }
 
         //write all data
-        currentTrial.writeTrial();
+        if(getData().getDevice() == Device.MOOSE){
+            setTrial(currentTrial);
+            //request data from phone
+            Message message = new Message("Server", "Info", "RequestData");
+            getCommunicator().sendMessage(message.makeMessage());
+            //scrollController does the rest (when receiving the answer from the client)
+
+        }else{
+            currentTrial.writeTrial();
+        }
         System.out.println("________Trial END_______" + System.currentTimeMillis());
         currentTrial = null;
 
@@ -571,48 +589,11 @@ public class RichTextViewController extends ScrollController {
     }
 
 
-
-    /*
-    public void scrollToLine(int line){
-        //Centering (old) target in screen so the scrolling distance is constant !
-        int firstLineToBeVisible = line - (getNumberOfVisibleLines()/2);
-        int absPositionTarget;
-        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(firstLineToBeVisible);
-        //if first line is already visible -> target is too far south -> scroll to last line
-        if(bounds.isEmpty()) {
-            absPositionTarget = getTextArea().getAbsolutePosition(firstLineToBeVisible, 0);
-        }else{
-            int lastLineToBeVisible = line + (getNumberOfVisibleLines()/2);
-            absPositionTarget = getTextArea().getAbsolutePosition(lastLineToBeVisible, 0);
-        }
-        System.out.println("S start");
-        getTextArea().moveTo(absPositionTarget);
-        getTextArea().requestFollowCaret();
-        System.out.println("S end");
-    }
-    */
-
-
     public void stopSounds(){
         rightPlayer.stop();
         wrongPlayer.stop();
     }
 
-    /*
-    public void startTrial(ActionEvent actionEvent) {
-        targetNumber = 0; //restart phases
-        distance = Integer.parseInt(distanceInput.getText());
-        frameSize = Integer.parseInt(frameInput.getText());
-
-        System.out.println(" -------- NEW TRIAL -------- ");
-        getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
-
-        //remove old target and set new one
-        InlineCssTextArea textArea = getTextArea();
-        int l = textArea.getParagraphLength(targetIndex);
-        textArea.setStyle(targetIndex, 0, l, "-rtfx-background-color: transparent;");
-        setTrial();
-    } */
 
     public void clickedBack(ActionEvent actionEvent) throws IOException {
         goToView("Experiment_StartView.fxml");
