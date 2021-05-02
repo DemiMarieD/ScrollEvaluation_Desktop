@@ -16,7 +16,7 @@ public class MainApplication extends Application {
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("StartView.fxml"));
         Parent root = loader.load();
-        Scene newScene = new Scene(root, 900, 600);
+        Scene newScene = new Scene(root, 1280, 650);
 
         primaryStage.setTitle("Scroll Evaluator");
         primaryStage.setScene(newScene);

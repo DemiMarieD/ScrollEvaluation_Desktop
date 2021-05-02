@@ -4,22 +4,22 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ExperimentController">
+<AnchorPane fx:id="pane" prefHeight="650.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ExperimentController">
     <children>
-        <Label layoutX="302.0" layoutY="115.0" prefHeight="85.0" prefWidth="297.0" text="EXPERIMENT SET UP">
+        <Label layoutX="443.0" layoutY="142.0" prefHeight="85.0" prefWidth="297.0" text="EXPERIMENT SET UP">
             <font>
                 <Font size="32.0" />
             </font>
         </Label>
-        <Button layoutX="600.0" layoutY="515.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="200.0" text="Reciprocal Framing task" />
-        <Button layoutX="600.0" layoutY="470.0" mnemonicParsing="false" onAction="#clickedHyperlink" prefHeight="39.0" prefWidth="200.0" text="Search Task " />
-        <Button layoutX="600.0" layoutY="425.0" mnemonicParsing="false" onAction="#clickedCount" prefHeight="39.0" prefWidth="200.0" text="Count Task" />
-      <Button layoutX="77.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="150.0" text="&lt; Back" />
-      <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="259.0" layoutY="227.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
-        <ComboBox fx:id="cb" layoutX="337.0" layoutY="267.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
-        <TextField fx:id="idField" layoutX="400.0" layoutY="308.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
-        <TextField fx:id="blocksField" layoutX="400.0" layoutY="340.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="2" />
-      <Label layoutX="337.0" layoutY="312.0" prefHeight="17.0" prefWidth="60.0" text="Id:" />
-        <Label layoutX="337.0" layoutY="344.0" prefHeight="17.0" prefWidth="60.0" text="#Blocks:" />
+        <Button layoutX="475.0" layoutY="414.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="227.0" text="Reciprocal Framing task" />
+        <Button layoutX="970.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedHyperlink" prefHeight="39.0" prefWidth="131.0" text="Search Task " />
+        <Button layoutX="1117.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedCount" prefHeight="39.0" prefWidth="131.0" text="Count Task" />
+      <Button layoutX="85.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="150.0" text="&lt; Back" />
+      <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="400.0" layoutY="254.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
+        <ComboBox fx:id="cb" layoutX="478.0" layoutY="294.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
+        <TextField fx:id="idField" layoutX="541.0" layoutY="335.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
+        <TextField fx:id="blocksField" layoutX="541.0" layoutY="367.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="2" />
+      <Label layoutX="478.0" layoutY="339.0" prefHeight="17.0" prefWidth="60.0" text="Id:" />
+        <Label layoutX="478.0" layoutY="371.0" prefHeight="17.0" prefWidth="60.0" text="#Blocks:" />
     </children>
 </AnchorPane>

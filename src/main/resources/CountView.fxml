@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CountViewController">
+<AnchorPane fx:id="pane" prefHeight="650.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CountViewController">
     <children>
         <Button layoutX="760.0" layoutY="516.0" mnemonicParsing="false" onAction="#print" prefHeight="39.0" prefWidth="107.0" text="Print" />
         <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />

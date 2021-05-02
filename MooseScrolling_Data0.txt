@@ -1,0 +1,3 @@
+ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, (T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible, Start direction, Finger count, Finger positions MIN, Finger positions MAX, Scroll area size  
+0,MOUSE, --- ,1,1,1,6.0,20,DOWN,117,18.0,true,9455,4349,0,1671,3435,1,1,0,DOWN, ---, ---, ---, ---
+0,MOUSE, --- ,2,1,2,3.0,220,UP,201,18.0,true,8750,8019,1570,722,9,1,1,1,DOWN, ---, ---, ---, ---

@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ScrollViewController">
+<AnchorPane fx:id="pane" prefHeight="650.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ScrollViewController">
     <children>
         <Button layoutX="760.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="107.0" text="Next &gt;" />
         <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />

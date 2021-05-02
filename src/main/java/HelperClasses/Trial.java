@@ -36,6 +36,7 @@ public class Trial {
     double fingerCount;
     String posMin;
     String posMax;
+    String scrollAreaSize;
 
 
 
@@ -67,7 +68,7 @@ public class Trial {
                 String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, " +
                         "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
                         "(T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible, Start direction, " +
-                        "Finger count, Finger positions MIN, Finger positions MAX  \n";
+                        "Finger count, Finger positions MIN, Finger positions MAX, Scroll area size  \n";
                 writer.write(text);
                 writer.flush();
             }
@@ -110,12 +111,14 @@ public class Trial {
             data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
-                    targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," + posMin+ "," + posMax + "\n";
+                    targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," + posMin+ "," + posMax + "," + scrollAreaSize +
+                    "\n";
         }else{
             data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
-                    targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---" +"\n";
+                    targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---" +
+                    "\n";
         }
 
         try {
@@ -146,6 +149,9 @@ public class Trial {
         this.posMax = posMax;
     }
 
+    public void setScrollAreaSize(String scrollAreaSize) {
+        this.scrollAreaSize = scrollAreaSize;
+    }
 
     public void targetInFrame(){
         targetInFrame_counter++;

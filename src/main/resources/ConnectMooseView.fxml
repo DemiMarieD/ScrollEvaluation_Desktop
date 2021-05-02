@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ConnectMooseController">
+<AnchorPane fx:id="pane" prefHeight="650.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ConnectMooseController">
     <children>
         <Label layoutX="393.0" layoutY="94.0" prefHeight="85.0" prefWidth="116.0" text="MOOSE">
             <font>

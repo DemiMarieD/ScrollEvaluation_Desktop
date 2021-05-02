@@ -271,6 +271,9 @@ public class ScrollController extends Controller{
                 if (m.getActionName().equals("fingerCount")) {
                     trial.setFingerCount(Double.parseDouble(m.getValue()));
 
+                }else if(m.getActionName().equals("touchAreaSize")) {
+                    trial.setScrollAreaSize(m.getValue());
+
                 }else if (m.getActionName().equals("minMax")) {
                     //make look like: minX/minY,maxX/maxY
                     String[] val = m.getValue().split(",");

@@ -3,19 +3,23 @@
 <?import java.net.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RichTextViewController">
+<AnchorPane fx:id="pane" prefHeight="650.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RichTextViewController">
     <children>
         <Pane fx:id="indicator" layoutX="142.0" layoutY="272.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: #00ccff;" />
-        <ScrollPane fx:id="scrollPane_parent" layoutX="300.0" prefHeight="570.0" prefWidth="531.0" />
-        <Pane fx:id="frame" layoutX="142.0" layoutY="272.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: red;" />
-        <Label fx:id="info" layoutX="20.0" layoutY="65.0" text="Press space-bar to when target positioned." />
+        <ScrollPane fx:id="scrollPane_parent" layoutX="450.0" prefHeight="570.0" prefWidth="531.0" />
+        <Pane fx:id="frame" layoutX="300.0" layoutY="272.0" prefHeight="200.0" prefWidth="29.0" style="-fx-background-color: red;" />
+        <Label fx:id="info" layoutX="170.0" layoutY="65.0" text="Press space-bar to when target positioned." />
         <ComboBox fx:id="modeSelector" layoutX="24.0" layoutY="31.0" prefWidth="150.0" promptText="Select Mode..." />
-        <Button layoutX="37.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back"/>
-      <Pane fx:id="topPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: white;">
+        <Button layoutX="100.0" layoutY="516.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="97.0" text="&lt; Back" />
+      <Pane fx:id="topPane" prefHeight="650.0" prefWidth="1280.0" style="-fx-background-color: white;">
          <children>
-            <ProgressIndicator fx:id="loadIndicator" layoutX="424.0" layoutY="300.0" BorderPane.alignment="CENTER" />
-             <Label fx:id="topPaneLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="264.0" layoutY="167.0" prefHeight="126.0" prefWidth="372.0" text="Setting up..." textAlignment="CENTER" />
+            <ProgressIndicator fx:id="loadIndicator" layoutX="580.0" layoutY="320.0" BorderPane.alignment="CENTER" />
+             <Label fx:id="topPaneLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="420.0" layoutY="194.0" prefHeight="126.0" prefWidth="372.0" text="Setting up..." textAlignment="CENTER">
+               <font>
+                  <Font name="Arial" size="24.0" />
+               </font></Label>
          </children></Pane>
 
     </children>

@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.text.*?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane fx:id="pane" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="StartController">
+<AnchorPane fx:id="pane" prefHeight="650.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="StartController">
    <children>
-      <Button  layoutX="104.0" layoutY="516.0" mnemonicParsing="false" onAction="#nextMoose" prefHeight="39.0" prefWidth="309.0" text="Moose" />
-      <Button  layoutX="473.0" layoutY="516.0" mnemonicParsing="false" onAction="#nextMouse" prefHeight="39.0" prefWidth="309.0" text="Mouse" />
-      <Label layoutX="373.0" layoutY="127.0" prefHeight="85.0" prefWidth="155.0" text="WELCOME">
+      <Button layoutX="162.0" layoutY="516.0" mnemonicParsing="false" onAction="#nextMoose" prefHeight="39.0" prefWidth="400.0" text="Moose" />
+      <Button layoutX="717.0" layoutY="516.0" mnemonicParsing="false" onAction="#nextMouse" prefHeight="39.0" prefWidth="400.0" text="Mouse" />
+      <Label layoutX="562.0" layoutY="146.0" prefHeight="85.0" prefWidth="155.0" text="WELCOME">
          <font>
             <Font size="32.0" />
          </font></Label>
-      <Label layoutX="263.0" layoutY="212.0" text="Please Select the Input HelperClasses.Device you want to use!" />
+      <Label layoutX="530.0" layoutY="222.0" text="Please Select the Device you want to use!" />
+      <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="287.0" layoutY="310.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@files/moose.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="842.0" layoutY="310.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@files/mouse.png" />
+         </image>
+      </ImageView>
    </children>
 </AnchorPane>
