@@ -30,6 +30,7 @@ public class Trial {
     int targetInFrame_counter;
     int targetVisible_counter;
     boolean hit;
+    int textLength;
 
     //only for moose
     ScrollingMode mode;
@@ -65,7 +66,7 @@ public class Trial {
             Boolean isNew = !file.exists();
             writer = new BufferedWriter(new FileWriter(file, true));
             if(isNew){
-                String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Frame Height, Distance, " +
+                String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Text Length (lines), Frame Height, Distance, " +
                         "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
                         "(T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible, Start direction, " +
                         "Finger count, Finger positions MIN, Finger positions MAX, Scroll area size  \n";
@@ -92,9 +93,13 @@ public class Trial {
 
         //todo Bug not correct times!
         long deltaTime_total = time_trialEnd - time_trialStart;
-        long deltaTime_scroll = time_scrollEnd - time_scrollStart;
-        long deltaTime_startScroll = time_scrollStart - time_trialStart;
-        long deltaTime_select = time_trialEnd - time_scrollEnd;
+        long deltaTime_scroll = Math.max(time_scrollEnd - time_scrollStart, 0);
+        long deltaTime_startScroll = Math.max(time_scrollStart - time_trialStart, 0);
+        long deltaTime_select = deltaTime_total;
+        if(deltaTime_scroll > 0){
+           deltaTime_select = time_trialEnd - time_scrollEnd;
+        }
+
         System.out.print( " - total " + deltaTime_total + " - scroll " + deltaTime_scroll + " - start " + deltaTime_startScroll + " - select " + deltaTime_select );
 
         long deltaTime_fineTune = 0;
@@ -108,13 +113,13 @@ public class Trial {
         //  "Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, (T) Start Scroll\n";
         String data = "";
         if(device == Device.MOOSE) {
-            data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," +
+            data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," + posMin+ "," + posMax + "," + scrollAreaSize +
                     "\n";
         }else{
-            data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," +
+            data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---" +
@@ -151,6 +156,10 @@ public class Trial {
 
     public void setScrollAreaSize(String scrollAreaSize) {
         this.scrollAreaSize = scrollAreaSize;
+    }
+
+    public void setTextLength(int textLength) {
+        this.textLength = textLength;
     }
 
     public void targetInFrame(){
