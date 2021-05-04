@@ -286,15 +286,18 @@ public class RichTextViewController extends ScrollController {
                 //delete space " " that would otherwise be now at the beginning of the new line
                 textArea.deleteText(endOfLine+1, endOfLine+2);
 
-           //remove empty lines
-            }else if(textArea.getParagraphLinesCount(i) == 1){
+
+            }
+            /*
+            //remove empty lines
+            else if(textArea.getParagraphLinesCount(i) == 1){
                 textArea.moveTo(i, 0);
                 int positionsUntilEndOfLine = textArea.getCurrentLineEndInParargraph();
                 if(positionsUntilEndOfLine != 0){
                     int endOfLine = textArea.getAbsolutePosition(i, 0) + positionsUntilEndOfLine;
                     textArea.deleteText(endOfLine, endOfLine+1);
                 }
-            }
+            } */
 
         }
 
@@ -488,6 +491,7 @@ public class RichTextViewController extends ScrollController {
         currentTrial.setVisibleLines(getNumberOfVisibleLines());
         currentTrial.setTextLength(totalNumberOfLines);
         currentTrial.setLineHeight(getLineHeight());
+        currentTrial.setPxPerMM(toPx(1));
         currentTrial.setTime_trialStart(System.currentTimeMillis());
         lastScrollTime = -1;
        // System.out.println("Scroll false");
@@ -540,14 +544,21 @@ public class RichTextViewController extends ScrollController {
         int boarder = nonReachableLines/2;
 
         int usableLines = totalNumberOfLines - nonReachableLines - distance;
-        int randIndex = boarder + random.nextInt(usableLines);
-        //if down then start must be positioned above thats why we need +distance space
-        if(direction.equals("DOWN")){
-            randIndex += distance;
+        boolean valid = false;
+        int randIndex = 0;
+        while (!valid) {
+            randIndex = boarder + random.nextInt(usableLines);
+            //if down then start must be positioned above thats why we need +distance space
+            if (direction.equals("DOWN")) {
+                randIndex += distance;
+            }
+            String targetText = getTextArea().getText(randIndex);
+            System.out.println("TT: >" +targetText +"<");
+            if(!targetText.equals("")){
+                valid = true;
+            }
         }
-
         return randIndex;
-
     }
 
     public void updateFrameHeight(){

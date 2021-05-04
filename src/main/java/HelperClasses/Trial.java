@@ -32,6 +32,7 @@ public class Trial {
     int targetInFrame_counter;
     int targetVisible_counter;
     boolean hit;
+    double pxPerMM;
 
 
     //only for moose
@@ -62,7 +63,6 @@ public class Trial {
 
 
         try {
-            //todo .csv !
             String path = "MooseScrolling_Data" + participantID + ".txt"; //saved in storage on the phone
             File file = new File(path);
             Boolean isNew = !file.exists();
@@ -71,7 +71,7 @@ public class Trial {
                 String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Text Length (lines), Visible Lines, Frame Height, Distance, " +
                         "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
                         "(T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible, Start direction, " +
-                        "Finger count, Finger positions MIN, Finger positions MAX, Scroll area size  \n";
+                        "Finger count, Finger positions MIN, Finger positions MAX, Scroll area size, Pixels per mm (of PC)  \n";
                 writer.write(text);
                 writer.flush();
             }
@@ -118,18 +118,18 @@ public class Trial {
             data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," + visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
-                    targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," + posMin+ "," + posMax + "," + scrollAreaSize +
+                    targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," + posMin+ "," + posMax + "," + scrollAreaSize + "," + pxPerMM+
                     "\n";
         }else{
             data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," +  visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
-                    targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---" +
+                    targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---," + pxPerMM +
                     "\n";
         }
 
         try {
-            writer.write(data); 
+            writer.write(data);
             writer.flush();
             writer.close();
         } catch (IOException e) {
@@ -162,6 +162,10 @@ public class Trial {
 
     public void setTextLength(int textLength) {
         this.textLength = textLength;
+    }
+
+    public void setPxPerMM(double pxPerMM) {
+        this.pxPerMM = pxPerMM;
     }
 
     public void setVisibleLines(int visibleLines) {
