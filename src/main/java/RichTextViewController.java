@@ -62,6 +62,9 @@ public class RichTextViewController extends ScrollController {
     private boolean breakSet;
     private int totalNumberOfLines;
     private int bugMove; //needed because adjustment to start will cause two "scrolls" that should not be counted
+    //private double lineHeight;
+    private int lastMiddleLine; //needed to scroll to start properly
+    private double maxScrollVal; //needed to note when start / end of document is reached
 
     //For Framing Task
     private List<int[]> possibleCombinations;
@@ -83,9 +86,7 @@ public class RichTextViewController extends ScrollController {
     private boolean scrollStarted;
     private boolean targetVisible;
     private boolean targetInFrame;
-    private double lineHeight;
 
-    private double maxScrollVal;
 
     private MediaPlayer wrongPlayer;
     private MediaPlayer rightPlayer;
@@ -137,13 +138,6 @@ public class RichTextViewController extends ScrollController {
 
 
         setUpScrollPane();
-
-        /* getTextArea().estimatedScrollYProperty().addListener(new  ChangeListener<Double>() {
-            @Override
-            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue) {
-                System.out.println("Scroll !");
-            }
-        }); */
 
         getScrollPane().estimatedScrollYProperty().addListener(new ChangeListener<Double>() {
             @Override
@@ -211,18 +205,18 @@ public class RichTextViewController extends ScrollController {
         scroller.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
             @Override
             public void handle(WorkerStateEvent event) {
+                //Set Layout parameters
                 addLineNumbers();
-                setLineHeight();
                 setMaxScrollVal();
+                lastMiddleLine = (int) (getScrollContentHeight()/getLineHeight());
+
+                //Set Experiment Task
                 setTrial();
             }
         });
         new Thread(scroller).start();
 
     }
-
-
-
 
     private boolean isVisible() {
         Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(targetIndex);
@@ -315,18 +309,17 @@ public class RichTextViewController extends ScrollController {
         //Position Indicator
         indicator.setLayoutX(scrollPane_parent.getBoundsInParent().getMaxX() - scrollBarWidth );
        // indicator.setLayoutY(scrollPane_parent.getBoundsInParent().getMinY() + (scrollPane_parent.getHeight() / 2));
-        Text t = (Text) textArea.lookup(".text");
-        lineHeight = t.getBoundsInLocal().getHeight();
+        //Text t = (Text) textArea.lookup(".text");
+        //lineHeight = t.getBoundsInLocal().getHeight();
         totalNumberOfLines = textArea.getParagraphs().size();
         System.out.println("NL " + totalNumberOfLines);
-        double scrollContentHeight = totalNumberOfLines*lineHeight;
+        double scrollContentHeight = totalNumberOfLines*getLineHeight();
         double indicatorHeight = scrollContentHeight/scrollPane_parent.getHeight();
         indicator.setPrefHeight(indicatorHeight);
 
     }
 
     public void setMaxScrollVal(){
-        setScrollContentHeight();
         Platform.runLater(() -> {
             getScrollPane().scrollYToPixel(getScrollContentHeight());
             maxScrollVal = getScrollPane().estimatedScrollYProperty().getValue();
@@ -386,10 +379,10 @@ public class RichTextViewController extends ScrollController {
 
             if(d == UP) {
                 direction = "UP";
-                setTarget("UP");
+                setTarget();
             }else if(d == DOWN) {
                 direction = "DOWN";
-                setTarget("DOWN");
+                setTarget();
             }
 
 
@@ -413,7 +406,7 @@ public class RichTextViewController extends ScrollController {
     }
 
     //Updates Target Highlight, Indicator position and Frame size + Colors
-    public void setTarget(String direction){
+    public void setTarget(){
 
         InlineCssTextArea textArea = getTextArea();
 
@@ -453,14 +446,11 @@ public class RichTextViewController extends ScrollController {
           //  scrollToLine(startPoint);
         }
 
-        //System.out.println("Scroll to start " + startPoint + " (target "+ targetIndex);
+        System.out.println("Scroll to start " + (startPoint+1) + " (target "+ (targetIndex+1) + ")" + "- D: " + distance + " vs. " + Math.abs(startPoint-targetIndex));
 
-        //Centering (old) target in screen so the scrolling distance is constant !
-        int firstLineToBeVisible = Math.max( startPoint - (getNumberOfVisibleLines()/2), 0);
         int absPositionTarget;
-        Optional<Bounds> bounds = getTextArea().getParagraphBoundsOnScreen(firstLineToBeVisible);
-        //if first line is already visible -> target is too far south -> scroll to last line
-        if(bounds.isEmpty()) {
+        if(lastMiddleLine > startPoint) {
+            int firstLineToBeVisible = Math.max( startPoint - (getNumberOfVisibleLines()/2), 0);
             absPositionTarget = getTextArea().getAbsolutePosition(firstLineToBeVisible, 0);
         }else{
             int lastLineToBeVisible = Math.min( startPoint + (getNumberOfVisibleLines()/2), totalNumberOfLines-1);
@@ -473,7 +463,6 @@ public class RichTextViewController extends ScrollController {
                 Platform.runLater(() -> {
                              getTextArea().moveTo(absPositionTarget); //todo figure out when this is finished
                              getTextArea().requestFollowCaret();
-
                         });
 
                 return null;
@@ -496,6 +485,9 @@ public class RichTextViewController extends ScrollController {
         System.out.println("\n ________Trial START_______");
         currentTrial = new Trial(getData().getParticipantID(), targetNumber, trialInBlock, blockNumber, targetIndex, frameSize, distance, direction, getData().getDevice());
         currentTrial.setMode(getData().getMode());
+        currentTrial.setVisibleLines(getNumberOfVisibleLines());
+        currentTrial.setTextLength(totalNumberOfLines);
+        currentTrial.setLineHeight(getLineHeight());
         currentTrial.setTime_trialStart(System.currentTimeMillis());
         lastScrollTime = -1;
        // System.out.println("Scroll false");
@@ -541,9 +533,9 @@ public class RichTextViewController extends ScrollController {
       //  System.out.println("Number of lines: " + totalNumberOfLines);
 
         //!! minus lines that can be reached outside the smallest frame
-        Text t = (Text) textArea.lookup(".text");
-        lineHeight = t.getBoundsInLocal().getHeight();
-        long visibleLines = Math.round(textArea.getHeight() / lineHeight);
+      //  Text t = (Text) textArea.lookup(".text");
+      //  lineHeight = t.getBoundsInLocal().getHeight();
+        long visibleLines = Math.round(textArea.getHeight() / getLineHeight());
         int nonReachableLines = (int) (visibleLines - frameSize);
         int boarder = nonReachableLines/2;
 
@@ -561,7 +553,7 @@ public class RichTextViewController extends ScrollController {
     public void updateFrameHeight(){
       //  Text t = (Text) getTextArea().lookup(".text");
       //  double lineHeight = t.getBoundsInLocal().getHeight();
-        double frameSize_px = frameSize * lineHeight;
+        double frameSize_px = frameSize * getLineHeight();
 
       // double frameSize_px = toPx(frameSize);
        frame.setPrefHeight(frameSize_px);
@@ -579,13 +571,12 @@ public class RichTextViewController extends ScrollController {
         }
         currentTrial.setTime_scrollEnd(lastScrollTime);
         currentTrial.setTime_trialEnd(System.currentTimeMillis());
-        currentTrial.setLineHeight(lineHeight);
-        currentTrial.setTextLength(totalNumberOfLines);
 
-        int middleIndex = (int) Math.round(getTextArea().getHeight()/lineHeight) / 2;
+        int middleIndex = (int) Math.round(getTextArea().getHeight()/getLineHeight()) / 2;
         int middleLine = getTextArea().visibleParToAllParIndex(middleIndex-1);
        // System.out.println("Middle Line = " + (middleLine+1));
         int deltaLines = targetIndex - middleLine;
+        lastMiddleLine = middleLine;
         currentTrial.setDistanceFromMiddle(deltaLines);
        // System.out.println("Delta Lines = " + deltaLines);
 

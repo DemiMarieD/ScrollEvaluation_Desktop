@@ -27,8 +27,8 @@ public class ScrollController extends Controller{
     private Robot robot;
     //for flick
     private double currentSpeed;
-    private double scrollContentHeight;
-    private double lineHeight;
+   // private double scrollContentHeight;
+   // private double lineHeight;
 
 
     private Trial trial;
@@ -73,22 +73,17 @@ public class ScrollController extends Controller{
         }
     }
 
-    public void setLineHeight() {
+    public double getLineHeight() {
         Text t = (Text) textArea.lookup(".text");
-        lineHeight = t.getBoundsInLocal().getHeight();
+        return t.getBoundsInLocal().getHeight();
     }
-
     public double getScrollContentHeight() {
-        return scrollContentHeight;
-    }
-
-    public void setScrollContentHeight() {
         int totalNumberOfLines = textArea.getParagraphs().size();
-        scrollContentHeight = totalNumberOfLines * lineHeight;
+        return totalNumberOfLines * getLineHeight();
+        //return scrollContentHeight;
     }
-
     public int getNumberOfVisibleLines(){
-        double numberOfLinesVisible = textArea.getHeight() / lineHeight;
+        double numberOfLinesVisible = textArea.getHeight() / getLineHeight();
         return  (int) Math.round(numberOfLinesVisible);
     }
 
