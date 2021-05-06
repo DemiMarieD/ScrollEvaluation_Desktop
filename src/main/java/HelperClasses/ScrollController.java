@@ -107,10 +107,6 @@ public class ScrollController extends Controller{
         return scrollThread;
     }
 
-    public void setScrollThread(Thread scrollThread) {
-        this.scrollThread = scrollThread;
-    }
-
     public String getText(String file) {
         File f = new File(file);
         String line;
@@ -173,7 +169,7 @@ public class ScrollController extends Controller{
                             if(scrollThread != null && !scrollThread.isInterrupted()){
                                 scrollThread.interrupt();
                             }
-                            scrollThread = new Thread(new ExponentialRegression_2_ScrollThread(pxPerMs));
+                            scrollThread = new Thread(new ExponentialRegression_ScrollThread(pxPerMs));
                             scrollThread.start();
 
                             break;
@@ -197,7 +193,7 @@ public class ScrollController extends Controller{
                             break;
                         case "speed":
                             double pxPerMs = Double.parseDouble(m.getValue());
-                            scrollThread = new Thread(new DecScrollThread(pxPerMs));
+                            scrollThread = new Thread(new Linear_ScrollThread(pxPerMs));
                             scrollThread.start();
 
                             break;
@@ -206,7 +202,7 @@ public class ScrollController extends Controller{
                             double addPx = Double.parseDouble(m.getValue());
                             currentSpeed = currentSpeed + addPx;
                             scrollThread.interrupt();
-                            scrollThread = new Thread(new DecScrollThread(currentSpeed));
+                            scrollThread = new Thread(new Linear_ScrollThread(currentSpeed));
                             scrollThread.start();
 
                             break;
@@ -238,7 +234,7 @@ public class ScrollController extends Controller{
                         }
 
                         double deltaY = Double.parseDouble(m.getValue()); //px
-                        scrollThread = new Thread(new ScrollThread(1, deltaY));
+                        scrollThread = new Thread(new Constant_ScrollThread(1, deltaY));
                         scrollThread.start();
 
                     } else if (m.getActionName().equals("stop")) {
@@ -285,10 +281,10 @@ public class ScrollController extends Controller{
 
 
     // Continuous Scrolling
-    public class ScrollThread implements Runnable{
+    public class Constant_ScrollThread implements Runnable{
         int time;
         double deltaPx;
-        public ScrollThread(int time, double px){
+        public Constant_ScrollThread(int time, double px){
             this.time = time;
             this.deltaPx = px;
         }
@@ -311,12 +307,13 @@ public class ScrollController extends Controller{
 
     }
 
-    public class DecScrollThread implements Runnable{
+    // Fixed time, with in that time linear regression
+    public class Linear_ScrollThread implements Runnable{
         double maxTime = 2500; // 2 sec
         double startTime;
         double speed_init;
         boolean end = false;
-        public DecScrollThread(double speed){
+        public Linear_ScrollThread(double speed){
             this.speed_init = speed;
             this.startTime = System.currentTimeMillis()+500; // + 500ms as for 0.5se the speed should stay same
         }
@@ -353,6 +350,62 @@ public class ScrollController extends Controller{
 
     }
 
+    // Fixed friction, with in exponential regression
+    public class ExponentialRegression_ScrollThread implements Runnable{
+        double startTime;
+        double speed_init;
+        boolean end = false;
+        public ExponentialRegression_ScrollThread(double speed){
+            this.speed_init = speed;
+            this.startTime = System.currentTimeMillis() + 500; // + 500ms as for 0.5se the speed should stay same
+        }
+        @Override
+        public void run() {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    if (scrollPane.isHover() && !end) {
+                        double deltaT_sec = Math.max(System.currentTimeMillis() - startTime, 0) / 1000;
+
+                        //System.out.println("Friction = " + Math.exp ( -2.006 * deltaT_sec));
+                        //System.out.println("Init v " + speed_init);
+
+                        //formula for the current rotation speed over time w(t) may be:   w(t) = w0*exp(-c*(t - t0))
+                        // mm - sec
+                        double deltaPx = Math.abs (speed_init) * Math.exp ( -2.006 * deltaT_sec);
+                       // System.out.println(" new px (mm - sec) " + deltaPx);
+
+                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
+                        double scrollBy = Math.min(speed_init, move); // so its not faster then the original speed?! - needed because we want 0.5sec constant scroll before decel
+                        scrollPane.scrollYBy(scrollBy);
+                        Runnable updater1 = () -> {
+                            currentSpeed = move;
+                        };
+                        Platform.runLater(updater1);
+
+                        end = deltaPx < 0.05;
+                        if(end){
+                            Runnable updater = () -> {
+                                Message message = new Message("Server", "Info", "StoppedScroll");
+                                getCommunicator().sendMessage(message.makeMessage());
+                            };
+                            Platform.runLater(updater);
+                        }
+                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
+                    }else{
+                        scrollThread.interrupt();
+                    }
+                }
+            } catch (InterruptedException e) {
+                //we need this because when a sleep the interrupt from outside throws an exception
+                Thread.currentThread().interrupt();
+            }
+        }
+
+    }
+
+
+    /*
+
     public class IPhoneScrollThread implements Runnable{
 
         double startTime;
@@ -382,58 +435,6 @@ public class ScrollController extends Controller{
                         Platform.runLater(updater1);
 
                         end = deltaPx == 0;
-                        if(end){
-                            Runnable updater = () -> {
-                                Message message = new Message("Server", "Info", "StoppedScroll");
-                                getCommunicator().sendMessage(message.makeMessage());
-                            };
-                            Platform.runLater(updater);
-                        }
-                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
-                    }else{
-                        scrollThread.interrupt();
-                    }
-                }
-            } catch (InterruptedException e) {
-                //we need this because when a sleep the interrupt from outside throws an exception
-                Thread.currentThread().interrupt();
-            }
-        }
-
-    }
-
-    public class ExponentialRegression_2_ScrollThread implements Runnable{
-
-        double startTime;
-        double speed_init;
-        boolean end = false;
-        public ExponentialRegression_2_ScrollThread(double speed){
-            this.speed_init = speed;
-            this.startTime = System.currentTimeMillis() + 500; // + 500ms as for 0.5se the speed should stay same
-        }
-        @Override
-        public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    if (scrollPane.isHover() && !end) {
-                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
-                        //System.out.println("Friction = " + Math.exp ( -2.006 * (deltaT/1000)));
-                        // double init_mm = toMM(speed_init);
-                        // speed_init == px/ms -> to convert to mm/sec? todo
-                        // double init_mm = toMM(speed_init) / 1000; // v in mm/sec -> much worse !
-                        //todo make depend on speed? high speed falls faster then low?!
-
-                        double newDelta = Math.abs (speed_init) * Math.exp ( -1 * (deltaT/1000) );
-                        double deltaPx = Math.max(0, toPx(newDelta));
-
-                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
-                        scrollPane.scrollYBy(move);
-                        Runnable updater1 = () -> {
-                            currentSpeed = move;
-                        };
-                        Platform.runLater(updater1);
-
-                        end = deltaPx < 0.01;
                         if(end){
                             Runnable updater = () -> {
                                 Message message = new Message("Server", "Info", "StoppedScroll");
@@ -506,6 +507,7 @@ public class ScrollController extends Controller{
 
     }
 
+     */
     public double toMM(double px){
         // dpi = pixels/inch
         double dpi = Screen.getPrimary().getDpi();
