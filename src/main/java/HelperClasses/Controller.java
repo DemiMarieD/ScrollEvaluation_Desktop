@@ -34,7 +34,7 @@ public class Controller {
 
 
     public void incomingMessage(String message) {
-        System.out.println("-- NEW MESSAGE: " + message);
+       // System.out.println("-- NEW MESSAGE: " + message);
         Message m = new Message(message);
 
         if(m.getActionType().equals("Action")) {

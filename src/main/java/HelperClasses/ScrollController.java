@@ -261,10 +261,10 @@ public class ScrollController extends Controller{
         } else if(m.getActionType().equals("Data")){
                 if (m.getActionName().equals("fingerCount")) {
                     trial.setFingerCount(Double.parseDouble(m.getValue()));
-
+                    System.out.println("Set FC");
                 }else if(m.getActionName().equals("touchAreaSize")) {
                     trial.setScrollAreaSize(m.getValue());
-
+                    System.out.println("Set TouchA");
                 }else if (m.getActionName().equals("minMax")) {
                     //make look like: minX/minY,maxX/maxY
                     String[] val = m.getValue().split(",");
@@ -272,6 +272,7 @@ public class ScrollController extends Controller{
                     trial.setPosMax(val[1]);
                     //assuming that this is send after finger count
                     trial.writeTrial();
+                    System.out.println("Write");
                 }
         } else {
             System.out.println("Mode and Action type are not same.");

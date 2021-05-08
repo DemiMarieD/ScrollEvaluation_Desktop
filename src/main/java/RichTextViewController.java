@@ -209,7 +209,7 @@ public class RichTextViewController extends ScrollController {
                 addLineNumbers();
                 setMaxScrollVal();
                 lastMiddleLine = (int) (getScrollContentHeight()/getLineHeight());
-
+                getTextArea().requestFocus();
                 //Set Experiment Task
                 setTrial();
             }

@@ -63,7 +63,7 @@ public class Trial {
 
 
         try {
-            String path = "MooseScrolling_Data" + participantID + ".txt"; //saved in storage on the phone
+            String path = "logData/MooseScrolling_Data_p" + participantID + ".txt"; //saved in storage on the phone
             File file = new File(path);
             Boolean isNew = !file.exists();
             writer = new BufferedWriter(new FileWriter(file, true));
