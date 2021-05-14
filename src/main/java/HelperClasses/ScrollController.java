@@ -259,21 +259,32 @@ public class ScrollController extends Controller{
             }
 
         } else if(m.getActionType().equals("Data")){
-                if (m.getActionName().equals("fingerCount")) {
-                    trial.setFingerCount(Double.parseDouble(m.getValue()));
-                    System.out.println("Set FC");
-                }else if(m.getActionName().equals("touchAreaSize")) {
-                    trial.setScrollAreaSize(m.getValue());
-                    System.out.println("Set TouchA");
-                }else if (m.getActionName().equals("minMax")) {
-                    //make look like: minX/minY,maxX/maxY
-                    String[] val = m.getValue().split(",");
-                    trial.setPosMin(val[0]);
-                    trial.setPosMax(val[1]);
-                    //assuming that this is send after finger count
-                    trial.writeTrial();
-                    System.out.println("Write");
-                }
+
+            if (m.getActionName().equals("save")) {
+                //format scrollArea-FingerCount-MinMaxPosition
+                // x/y-n-x/y,x/y
+
+                String[] data = m.getValue().split("-");
+                //scroll area size
+                String[] scrollArea = data[0].split("/");
+                trial.setScrollAreaSize_x(scrollArea[0]);
+                trial.setScrollAreaSize_y(scrollArea[1]);
+
+                //Finger count
+                trial.setFingerCount(Double.parseDouble(data[1]));
+
+                //Min & Max Finger Positions
+                String[] positions = data[2].split(",");
+                String[] min_val = positions[0].split("/");
+                trial.setPosMin_x(min_val[0]);
+                trial.setPosMin_y(min_val[1]);
+                String[] max_val = positions[1].split("/");
+                trial.setPosMax_x(max_val[0]);
+                trial.setPosMax_y(max_val[1]);
+                //assuming that this is send after finger count
+                trial.writeTrial();
+            }
+
         } else {
             System.out.println("Mode and Action type are not same.");
         }
@@ -404,111 +415,6 @@ public class ScrollController extends Controller{
 
     }
 
-
-    /*
-
-    public class IPhoneScrollThread implements Runnable{
-
-        double startTime;
-        double speed_init;
-        boolean end = false;
-        // friction  = 750 px/s2
-        double friction = 0.00075;
-        public IPhoneScrollThread(double speed){
-            this.speed_init = speed;
-            this.startTime = System.currentTimeMillis()+500; // + 500ms as for 0.5se the speed should stay same
-        }
-        @Override
-        public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    if (scrollPane.isHover() && !end) {
-                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
-                        //New speed = m * flick speed – (friction * delta-time)
-                        double deltaPx = Math.abs (speed_init) - ( friction * deltaT );
-                        deltaPx = Math.max(0, deltaPx);
-
-                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
-                        scrollPane.scrollYBy(move);
-                        Runnable updater1 = () -> {
-                            currentSpeed = move;
-                        };
-                        Platform.runLater(updater1);
-
-                        end = deltaPx == 0;
-                        if(end){
-                            Runnable updater = () -> {
-                                Message message = new Message("Server", "Info", "StoppedScroll");
-                                getCommunicator().sendMessage(message.makeMessage());
-                            };
-                            Platform.runLater(updater);
-                        }
-                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
-                    }else{
-                        scrollThread.interrupt();
-                    }
-                }
-            } catch (InterruptedException e) {
-                //we need this because when a sleep the interrupt from outside throws an exception
-                Thread.currentThread().interrupt();
-            }
-        }
-
-    }
-
-    public class ExponentialRegressionScrollThread implements Runnable{
-
-        double startTime;
-        double speed_init;
-        boolean end = false;
-        public ExponentialRegressionScrollThread(double speed){
-            this.speed_init = speed;
-            this.startTime = System.currentTimeMillis(); // + 500ms as for 0.5se the speed should stay same
-        }
-        @Override
-        public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    if (scrollPane.isHover() && !end) {
-                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
-                        //System.out.println("Friction = " + Math.exp ( -2.006 * (deltaT/1000)));
-                        double init_mm = toMM(speed_init);
-                        // speed_init == px/ms -> to convert to mm/sec? todo
-                       // double init_mm = toMM(speed_init) / 1000; // v in mm/sec -> much worse !
-
-                        //580.31 e^(-2.006x) (mm / sec) -> ms div 1000 -> sec
-                        double delta_mm = Math.abs (init_mm) * Math.exp ( -2.006 * (deltaT/1000) );
-                        double deltaPx = Math.max(0, toPx(delta_mm));
-
-                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
-                        scrollPane.scrollYBy(move);
-                        Runnable updater1 = () -> {
-                            currentSpeed = move;
-                        };
-                        Platform.runLater(updater1);
-
-                        end = deltaPx < 0.01;
-                        if(end){
-                            Runnable updater = () -> {
-                                Message message = new Message("Server", "Info", "StoppedScroll");
-                                getCommunicator().sendMessage(message.makeMessage());
-                            };
-                            Platform.runLater(updater);
-                        }
-                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
-                    }else{
-                        scrollThread.interrupt();
-                    }
-                }
-            } catch (InterruptedException e) {
-                //we need this because when a sleep the interrupt from outside throws an exception
-                Thread.currentThread().interrupt();
-            }
-        }
-
-    }
-
-     */
     public double toMM(double px){
         // dpi = pixels/inch
         double dpi = Screen.getPrimary().getDpi();

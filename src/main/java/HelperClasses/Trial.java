@@ -38,9 +38,12 @@ public class Trial {
     //only for moose
     ScrollingMode mode;
     double fingerCount;
-    String posMin;
-    String posMax;
-    String scrollAreaSize;
+    String posMin_x;
+    String posMax_x;
+    String scrollAreaSize_x;
+    String posMin_y;
+    String posMax_y;
+    String scrollAreaSize_y;
 
 
 
@@ -71,7 +74,8 @@ public class Trial {
                 String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Text Length (lines), Visible Lines, Frame Height, Distance, " +
                         "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
                         "(T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible, Start direction, " +
-                        "Finger count, Finger positions MIN, Finger positions MAX, Scroll area size, Pixels per mm (of PC)  \n";
+                        "Finger count, Finger positions X-MIN, Finger positions Y-MIN, " +
+                        "Finger positions X-MAX, Finger positions Y-MAX, Scroll area size X, Scroll area size Y, Pixels per mm (of PC)  \n";
                 writer.write(text);
                 writer.flush();
             }
@@ -118,13 +122,14 @@ public class Trial {
             data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," + visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
-                    targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," + posMin+ "," + posMax + "," + scrollAreaSize + "," + pxPerMM+
+                    targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," +
+                    posMin_x + "," + posMin_y + "," + posMax_x + "," + posMax_y + "," + scrollAreaSize_x + "," + scrollAreaSize_y + "," + pxPerMM +
                     "\n";
         }else{
             data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," +  visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
-                    targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---," + pxPerMM +
+                    targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---, ---, ---, ---," + pxPerMM +
                     "\n";
         }
 
@@ -148,16 +153,28 @@ public class Trial {
         this.fingerCount = fingerCount;
     }
 
-    public void setPosMin(String posMin) {
-        this.posMin = posMin;
+    public void setPosMin_x(String posMin_x) {
+        this.posMin_x = posMin_x;
     }
 
-    public void setPosMax(String posMax) {
-        this.posMax = posMax;
+    public void setPosMax_x(String posMax_x) {
+        this.posMax_x = posMax_x;
     }
 
-    public void setScrollAreaSize(String scrollAreaSize) {
-        this.scrollAreaSize = scrollAreaSize;
+    public void setScrollAreaSize_x(String scrollAreaSize_x) {
+        this.scrollAreaSize_x = scrollAreaSize_x;
+    }
+
+    public void setPosMin_y(String posMin_y) {
+        this.posMin_y = posMin_y;
+    }
+
+    public void setPosMax_y(String posMax_y) {
+        this.posMax_y = posMax_y;
+    }
+
+    public void setScrollAreaSize_y(String scrollAreaSize_y) {
+        this.scrollAreaSize_y = scrollAreaSize_y;
     }
 
     public void setTextLength(int textLength) {
