@@ -583,19 +583,31 @@ public class RichTextViewController extends ScrollController {
         currentTrial.setTime_scrollEnd(lastScrollTime);
         currentTrial.setTime_trialEnd(System.currentTimeMillis());
 
-        int middleIndex = (int) Math.round(getTextArea().getHeight()/getLineHeight()) / 2;
-        int middleLine = getTextArea().visibleParToAllParIndex(middleIndex-1);
+       // int middleIndex = (int) Math.round( Math.round(getTextArea().getHeight()/getLineHeight()) / 2.0 ); //should be 16
+       // System.out.println("Middle Index " + lM/2 ); // should be 18
+       // int middleLine = getTextArea().visibleParToAllParIndex(middleIndex+1); // index start at 0 -> -1, but list starts with two "non visible items" -> -1+2 = +1
+
+        int visibleLines = (getTextArea().lastVisibleParToAllParIndex() - getTextArea().firstVisibleParToAllParIndex());
+        int middleLine = getTextArea().firstVisibleParToAllParIndex() + (visibleLines/2); //rounds down
        // System.out.println("Middle Line = " + (middleLine+1));
         int deltaLines = targetIndex - middleLine;
+        if(visibleLines%2 != 0){
+            //we dont have a true middle
+                        // for get the closer value to the middle  // add the direction
+            deltaLines = (int)  Math.floor(Math.abs(deltaLines - 0.5)) * (deltaLines/Math.abs(deltaLines)) ;
+        }
         lastMiddleLine = middleLine;
         currentTrial.setDistanceFromMiddle(deltaLines);
-       // System.out.println("Delta Lines = " + deltaLines);
+        System.out.println("Delta Lines = " + deltaLines);
 
-
-        if(isInFrame()){
+        boolean inFrame = Math.abs(deltaLines) < Math.round(frameSize/2.0);
+        //isInFrame()
+        if(inFrame){
+           // System.out.println("-- Hit - dL " + deltaLines);
             rightPlayer.play();
             currentTrial.setHit(true);
         }else{
+          //  System.out.println("-- Miss - dL " + deltaLines);
             wrongPlayer.play();
             currentTrial.setHit(false);
         }
