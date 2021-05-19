@@ -594,7 +594,13 @@ public class RichTextViewController extends ScrollController {
         if(visibleLines%2 != 0){
             //we dont have a true middle
                         // for get the closer value to the middle  // add the direction
-            deltaLines = (int)  Math.floor(Math.abs(deltaLines - 0.5)) * (deltaLines/Math.abs(deltaLines)) ;
+           int d;
+           if(deltaLines == 0){
+               d = 1;
+           }else{
+               d = (deltaLines)/Math.abs(deltaLines);
+           }
+            deltaLines = (int)  Math.floor(Math.abs(deltaLines - 0.5)) * d ;
         }
         lastMiddleLine = middleLine;
         currentTrial.setDistanceFromMiddle(deltaLines);
