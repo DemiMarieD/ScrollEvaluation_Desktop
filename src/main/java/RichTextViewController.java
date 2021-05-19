@@ -72,6 +72,9 @@ public class RichTextViewController extends ScrollController {
     private List<Integer> upDownMix;
     private List<int[]> possibleCombinationsBlockEven;
     private List<int[]> possibleCombinationsBlockOdd;
+
+    private List<int[]> nextPositions;
+
     private final int index_distance = 0;
     private final int index_direction = 1;
     private final int index_frame = 2;
@@ -157,6 +160,12 @@ public class RichTextViewController extends ScrollController {
                 upDownMix.add(1);
             }
         }
+        //set possible next Button positions
+        nextPositions = new ArrayList<>();
+        nextPositions.add(new int[]{100, 516});
+        nextPositions.add(new int[]{100, 50});
+        nextPositions.add(new int[]{970, 516});
+        nextPositions.add(new int[]{970, 50});
 
         setUpScrollPane();
 
@@ -547,9 +556,16 @@ public class RichTextViewController extends ScrollController {
                 String info = "Thanks for your help! \n\n";
                 topPaneLabel.setText(info + "Click 'next' to start.");
                 nextBtn.setVisible(true);
+                nextBtn.setLayoutX(nextPositions.get(0)[0]);
+                nextBtn.setLayoutY(nextPositions.get(0)[1]);
                 breakSet = true;
 
             } else if (!finished) {
+                Random random = new Random();
+                int i =  random.nextInt(nextPositions.size());
+                nextBtn.setLayoutX(nextPositions.get(i)[0]);
+                nextBtn.setLayoutY(nextPositions.get(i)[1]);
+
                 String info = "Take a break. " +
                         "\n\nBlock " + (blockNumber-1) + " of " + maxBlocks + " Blocks finished. " +
                         "\n\n";
