@@ -11,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
@@ -38,8 +39,8 @@ public class RichTextViewController extends ScrollController {
     final List<Integer> FRAMESIZES = Arrays.asList(3, 6);
     final int UP = -1;
     final int DOWN = 1;
-
-
+    @FXML
+    private  Button nextBtn;
     @FXML
     private  Label info;
     @FXML
@@ -67,11 +68,15 @@ public class RichTextViewController extends ScrollController {
     private double maxScrollVal; //needed to note when start / end of document is reached
 
     //For Framing Task
-    private List<int[]> possibleCombinations;
+    private List<int[]> currentSet;
+    private List<Integer> upDownMix;
+    private List<int[]> possibleCombinationsBlockEven;
+    private List<int[]> possibleCombinationsBlockOdd;
     private final int index_distance = 0;
     private final int index_direction = 1;
     private final int index_frame = 2;
     private int blockNumber;
+    //private int groupNumber;
     private int maxBlocks;
     private boolean finished;
     private int trialInBlock;
@@ -110,13 +115,14 @@ public class RichTextViewController extends ScrollController {
                         e.printStackTrace();
                     }
 
-                }else if(breakSet) {
+                /* }
+                    else if(breakSet) {
                     topPane.setVisible(false);
                     breakSet = false;
                     //getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
                     initTrial();
-
-                }else {
+                    */
+                }else if(!breakSet) {
                     checkTarget();
                 }
             }
@@ -126,8 +132,13 @@ public class RichTextViewController extends ScrollController {
         //Media new File(path).toURI().toString()
         wrongPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/wrong.wav").toURI().toString()));
         rightPlayer = new MediaPlayer(new Media(new File("src/main/resources/files/success.wav").toURI().toString()));
+        nextBtn.setVisible(false);
+
         //default values
-        possibleCombinations = new ArrayList<>();
+        currentSet = new ArrayList<>();
+        possibleCombinationsBlockOdd = new ArrayList<>();
+        possibleCombinationsBlockEven = new ArrayList<>();
+
         maxBlocks = getData().getNumberOfBlocks();
         finished = false;
         blockNumber = 0;
@@ -136,6 +147,16 @@ public class RichTextViewController extends ScrollController {
         breakSet = false;
         maxScrollVal = 11859; //default - to be overwritten
 
+        //set upDownMix
+        upDownMix = new ArrayList<Integer>();
+        int length = DISTANCES.size() * FRAMESIZES.size();
+        for(int i=0; i < length; i++){
+            if(i < length/2){
+                upDownMix.add(0);
+            }else{
+                upDownMix.add(1);
+            }
+        }
 
         setUpScrollPane();
 
@@ -345,11 +366,19 @@ public class RichTextViewController extends ScrollController {
     }
 
     public void setTrial() {
-        if(possibleCombinations.size() == 0){
+        if(currentSet.size() == 0){
             if(blockNumber < maxBlocks){
                // System.out.println("__________ Block finished! Take a Break _________");
                 blockNumber++;
-                setParametersForBlock();
+                trialInBlock = 0;
+
+                if(blockNumber%2 != 0) {
+                    setParametersForBlock();
+                    currentSet = possibleCombinationsBlockOdd;
+                }else{
+                    currentSet = possibleCombinationsBlockEven;
+                }
+                //todo always true?
                 if(blockNumber > 0) {
                     showTopPane();
                 }
@@ -364,15 +393,15 @@ public class RichTextViewController extends ScrollController {
         if(!finished) {
             trialInBlock++;
             targetNumber++;
-            info.setText("Trial " + trialInBlock + " / " + (2*FRAMESIZES.size()*DISTANCES.size()) +
+            info.setText("Trial " + trialInBlock + " / " + (FRAMESIZES.size()*DISTANCES.size()) +
                     "\nIn Block " + blockNumber + " / " + maxBlocks +
                     "\n\nPRESS SPACE BAR TO SELECT");
 
             Random random = new Random();
 
-            int randomIndex = random.nextInt(possibleCombinations.size());
-            int[] parameters = possibleCombinations.get(randomIndex);
-            possibleCombinations.remove(randomIndex);
+            int randomIndex = random.nextInt(currentSet.size());
+            int[] parameters = currentSet.get(randomIndex);
+            currentSet.remove(randomIndex);
 
             frameSize = parameters[index_frame];
             updateFrameHeight();
@@ -396,16 +425,27 @@ public class RichTextViewController extends ScrollController {
     }
 
     public void setParametersForBlock(){
-        trialInBlock = 0;
-        possibleCombinations = new ArrayList<>();
+        Collections.shuffle(upDownMix);
+        //possibleCombinations = new ArrayList<>();
+        possibleCombinationsBlockOdd = new ArrayList<>();
+        possibleCombinationsBlockEven = new ArrayList<>();
+        int counter = 0;
         for(int d : DISTANCES){
             for(int f : FRAMESIZES){
                 int[] combiUp = new int[]{d, UP, f};
-                possibleCombinations.add(combiUp);
                 int[] combiDown = new int[]{d, DOWN, f};
-                possibleCombinations.add(combiDown);
+
+                if(upDownMix.get(counter) == 0) {
+                    possibleCombinationsBlockOdd.add(combiUp);
+                    possibleCombinationsBlockEven.add(combiDown);
+                }else{
+                    possibleCombinationsBlockOdd.add(combiDown);
+                    possibleCombinationsBlockEven.add(combiUp);
+                }
+                counter++;
             }
         }
+
     }
 
     //Updates Target Highlight, Indicator position and Frame size + Colors
@@ -505,7 +545,8 @@ public class RichTextViewController extends ScrollController {
 
             if (blockNumber == 1) {
                 String info = "Thanks for your help! \n\n";
-                topPaneLabel.setText(info + "Press space bar to start.");
+                topPaneLabel.setText(info + "Click 'next' to start.");
+                nextBtn.setVisible(true);
                 breakSet = true;
 
             } else if (!finished) {
@@ -513,17 +554,11 @@ public class RichTextViewController extends ScrollController {
                         "\n\nBlock " + (blockNumber-1) + " of " + maxBlocks + " Blocks finished. " +
                         "\n\n";
                 topPaneLabel.setText(info);
-                //todo sleep after visible
-              /*  try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } */
-
-                topPaneLabel.setText(info + "Press space bar to continue.");
+                topPaneLabel.setText(info + "Click 'next' to continue.");
                 breakSet = true;
 
             } else {
+                nextBtn.setVisible(false);
                 topPaneLabel.setText(" Finished with this mode!  " +
                         "\n\n  Thanks for participating. ");
             }
@@ -647,6 +682,12 @@ public class RichTextViewController extends ScrollController {
         wrongPlayer.stop();
     }
 
+    public void next(ActionEvent actionEvent){
+        topPane.setVisible(false);
+        breakSet = false;
+        //getScrollPane().requestFocus(); // so on space-bar hit no accidental button press
+        initTrial();
+    }
 
     public void clickedBack(ActionEvent actionEvent) throws IOException {
         goToView("Experiment_StartView.fxml");
