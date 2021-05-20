@@ -53,7 +53,7 @@ public class Trial {
     public Trial(int participantID, int trialNumber, int trialInBlock, int block,  int targetLine, double frameHeight, int distance, String direction, Device device) {
         this.participantID = participantID;
         this.trialNumber = trialNumber;
-        this.frameHeight = frameHeight;
+        this.frameHeight = round2D(frameHeight);
         this.distance = distance;
         this.direction = direction;
         this.targetLine = targetLine;
@@ -154,27 +154,33 @@ public class Trial {
     }
 
     public void setPosMin_x(String posMin_x) {
-        this.posMin_x = posMin_x;
+        double d = Double.parseDouble(posMin_x);
+        this.posMin_x = String.valueOf(round2D(d));
     }
 
     public void setPosMax_x(String posMax_x) {
-        this.posMax_x = posMax_x;
+        double d = Double.parseDouble(posMax_x);
+        this.posMax_x = String.valueOf(round2D(d));
     }
 
     public void setScrollAreaSize_x(String scrollAreaSize_x) {
-        this.scrollAreaSize_x = scrollAreaSize_x;
+        double d = Double.parseDouble(scrollAreaSize_x);
+        this.scrollAreaSize_x = String.valueOf(round2D(d));
     }
 
     public void setPosMin_y(String posMin_y) {
-        this.posMin_y = posMin_y;
+        double d = Double.parseDouble(posMin_y);
+        this.posMin_y = String.valueOf(round2D(d));
     }
 
     public void setPosMax_y(String posMax_y) {
-        this.posMax_y = posMax_y;
+        double d = Double.parseDouble(posMax_y);
+        this.posMax_y = String.valueOf(round2D(d));
     }
 
     public void setScrollAreaSize_y(String scrollAreaSize_y) {
-        this.scrollAreaSize_y = scrollAreaSize_y;
+        double d = Double.parseDouble(scrollAreaSize_y);
+        this.scrollAreaSize_y = String.valueOf(round2D(d));
     }
 
     public void setTextLength(int textLength) {
@@ -182,7 +188,7 @@ public class Trial {
     }
 
     public void setPxPerMM(double pxPerMM) {
-        this.pxPerMM = pxPerMM;
+        this.pxPerMM = round2D(pxPerMM);
     }
 
     public void setVisibleLines(int visibleLines) {
@@ -224,6 +230,12 @@ public class Trial {
     }
 
     public void setLineHeight(double lineHeight) {
-        this.lineHeight = lineHeight;
+        this.lineHeight = round2D(lineHeight);
     }
+
+    //------------------------------------------------------------------------------
+    public double round2D(double d){
+       return Math.round(d*100.0)/100.0;
+    }
+
 }
