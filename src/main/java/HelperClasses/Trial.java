@@ -72,10 +72,10 @@ public class Trial {
             writer = new BufferedWriter(new FileWriter(file, true));
             if(isNew){
                 String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Text Length (lines), Visible Lines, Frame Height, Distance, " +
-                        "Direction, Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, " +
-                        "(T) Start Scroll, Distance from middle (lines), #Target in frame, #Target visible, Start direction, " +
-                        "Finger count, Finger positions X-MIN, Finger positions Y-MIN, " +
-                        "Finger positions X-MAX, Finger positions Y-MAX, Scroll area size X, Scroll area size Y, Pixels per mm (of PC)  \n";
+                        "Direction, Target Line, Line Height, Hit, T_Trial, T_Scroll, T_FineTune, T_Select, " +
+                        "T_StartScrolling, errorDistance(lines), inFrameCount, visibleCount, Start direction, " +
+                        "Finger count, FP_X-MIN, FP_Y-MIN, " +
+                        "FP_X-MAX, FP_Y-MAX, ScrollareaX, ScrollareaY, Px_mm\n";
                 writer.write(text);
                 writer.flush();
             }
@@ -235,7 +235,7 @@ public class Trial {
 
     //------------------------------------------------------------------------------
     public double round2D(double d){
-       return Math.round(d*100.0)/100.0;
+       return Math.round(d*1000.0)/1000.0;
     }
 
 }

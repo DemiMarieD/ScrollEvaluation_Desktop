@@ -18,7 +18,7 @@
       <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="400.0" layoutY="254.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
         <ComboBox fx:id="cb" layoutX="478.0" layoutY="294.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
         <TextField fx:id="idField" layoutX="541.0" layoutY="335.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
-        <TextField fx:id="blocksField" layoutX="541.0" layoutY="367.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="6" />
+        <TextField fx:id="blocksField" layoutX="541.0" layoutY="367.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="4" />
       <Label layoutX="478.0" layoutY="339.0" prefHeight="17.0" prefWidth="60.0" text="Id:" />
         <Label layoutX="478.0" layoutY="371.0" prefHeight="17.0" prefWidth="60.0" text="#Blocks:" />
     </children>

@@ -35,7 +35,8 @@ import java.util.function.IntFunction;
 
 public class RichTextViewController extends ScrollController {
     final int scrollBarWidth = 20; //px
-    final List<Integer> DISTANCES = Arrays.asList(20, 70, 120, 170, 220);
+   // final List<Integer> DISTANCES = Arrays.asList(20, 70, 120, 170, 220);
+    final List<Integer> DISTANCES = Arrays.asList(50, 100, 200, 300);
     final List<Integer> FRAMESIZES = Arrays.asList(3, 6);
     final int UP = -1;
     final int DOWN = 1;
@@ -178,7 +179,7 @@ public class RichTextViewController extends ScrollController {
                 if(bugMove > 2) {
                     if (currentTrial != null) {
                         if (!scrollStarted) {
-                            System.out.println(" ** Scroll started");
+                            // System.out.println(" ** Scroll started");
                             currentTrial.setTime_scrollStart(System.currentTimeMillis());
                             scrollStarted = true;
                             if (oldValue > newValue) {
@@ -498,7 +499,7 @@ public class RichTextViewController extends ScrollController {
           //  scrollToLine(startPoint);
         }
 
-        System.out.println("Scroll to start " + (startPoint+1) + " (target "+ (targetIndex+1) + ")" + "- D: " + distance + " vs. " + Math.abs(startPoint-targetIndex));
+      //  System.out.println("Scroll to start " + (startPoint+1) + " (target "+ (targetIndex+1) + ")" + "- D: " + distance + " vs. " + Math.abs(startPoint-targetIndex));
 
         int absPositionTarget;
         if(lastMiddleLine > startPoint) {
@@ -534,7 +535,7 @@ public class RichTextViewController extends ScrollController {
     private void initTrial() {
         targetVisible = isVisible();
         targetInFrame = isInFrame();
-        System.out.println("\n ________Trial START_______");
+       // System.out.println("\n ________Trial START_______");
         currentTrial = new Trial(getData().getParticipantID(), targetNumber, trialInBlock, blockNumber, targetIndex, frameSize, distance, direction, getData().getDevice());
         currentTrial.setMode(getData().getMode());
         currentTrial.setVisibleLines(getNumberOfVisibleLines());
@@ -592,9 +593,9 @@ public class RichTextViewController extends ScrollController {
       //  lineHeight = t.getBoundsInLocal().getHeight();
         long visibleLines = Math.round(textArea.getHeight() / getLineHeight());
         int nonReachableLines = (int) (visibleLines - frameSize);
-        int boarder = nonReachableLines/2;
+        int boarder = (int) Math.round(nonReachableLines/2.0);
 
-        int usableLines = totalNumberOfLines - nonReachableLines - distance;
+        int usableLines = totalNumberOfLines - nonReachableLines - distance - 1; //-1 just to be save
         boolean valid = false;
         int randIndex = 0;
         while (!valid) {
@@ -604,7 +605,7 @@ public class RichTextViewController extends ScrollController {
                 randIndex += distance;
             }
             String targetText = getTextArea().getText(randIndex);
-            System.out.println("TT: >" +targetText +"<");
+            //System.out.println("TT: >" +targetText +"<");
             if(!targetText.equals("")){
                 valid = true;
             }
@@ -655,7 +656,7 @@ public class RichTextViewController extends ScrollController {
         }
         lastMiddleLine = middleLine;
         currentTrial.setDistanceFromMiddle(deltaLines);
-        System.out.println("Delta Lines = " + deltaLines);
+       // System.out.println("Delta Lines = " + deltaLines);
 
         boolean inFrame = Math.abs(deltaLines) < Math.round(frameSize/2.0);
         //isInFrame()
@@ -680,7 +681,7 @@ public class RichTextViewController extends ScrollController {
         }else{
             currentTrial.writeTrial();
         }
-        System.out.println("________Trial END_______" + System.currentTimeMillis());
+        //System.out.println("________Trial END_______" + System.currentTimeMillis());
         currentTrial = null;
 
         //remove old target and set new one
@@ -756,7 +757,4 @@ public class RichTextViewController extends ScrollController {
 
     }
 
-    public void scrollHandler(ScrollEvent scrollEvent) {
-        System.out.println("Scroll Handler active");
-    }
 }
