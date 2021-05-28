@@ -34,12 +34,12 @@ public class ScrollController extends Controller{
 
     private Trial trial;
 
-    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(ScrollingMode.WHEEL,
-            ScrollingMode.DRAG, ScrollingMode.CIRCLE, ScrollingMode.RUBBING, ScrollingMode.FLICK_deceleration,
+    private final ArrayList<ScrollingMode> modes = new ArrayList<ScrollingMode>(Arrays.asList(
+            ScrollingMode.DRAG, ScrollingMode.CIRCLE, ScrollingMode.RUBBING,
             ScrollingMode.FLICK_iOS, ScrollingMode.RATE_BASED));
 
     private final ArrayList<String> list = new ArrayList<String>(Arrays.asList(
-            "Wheel", "Drag", "Circle", "Rubbing", "Flick Decelerate", "iOS - Demi", "Rate-Based"));
+            "Drag", "Circle", "Rubbing", "Flick", "Rate-Based"));
 
     @Override
     public void initData(Communicator communicator, Data data) {
@@ -182,38 +182,6 @@ public class ScrollController extends Controller{
 
                     break;
 
-                //----- Decelerating & Additative flick
-                case "DecelFlick":
-                    switch (m.getActionName()) {
-                        case "deltaY":
-                            double deltaY = Double.parseDouble(m.getValue()); //should be a px value
-                            if (scrollPane.isHover()) {
-                                scrollPane.scrollYBy(deltaY);
-                            }
-
-                            break;
-                        case "speed":
-                            double pxPerMs = Double.parseDouble(m.getValue());
-                            scrollThread = new Thread(new Linear_ScrollThread(pxPerMs));
-                            scrollThread.start();
-
-                            break;
-
-                        case "addSpeed":
-                            double addPx = Double.parseDouble(m.getValue());
-                            currentSpeed = currentSpeed + addPx;
-                            scrollThread.interrupt();
-                            scrollThread = new Thread(new Linear_ScrollThread(currentSpeed), "linear Scroll Thread");
-                            scrollThread.start();
-
-                            break;
-                        case "stop":
-                            scrollThread.interrupt();
-                            break;
-                    }
-
-                    break;
-
                 //----- Circle
                 case "Circle3":
                     if (m.getActionName().equals("deltaAngle")) {
@@ -245,13 +213,6 @@ public class ScrollController extends Controller{
 
                     break;
 
-                // SCROLL WHEEL
-                case "ScrollWheel":
-                    if (m.getActionName().equals("deltaNotches")) {
-                        int deltaNotches = Integer.parseInt(m.getValue()); //should be a px value
-                        robot.mouseWheel(deltaNotches); //unit of scrolls = "notches of the wheel"
-                    }
-                    break;
             }
 
         }else if(m.getActionType().equals("Action")) {
@@ -323,51 +284,6 @@ public class ScrollController extends Controller{
 
     }
 
-    // Fixed time, with in that time linear regression
-    public class Linear_ScrollThread implements Runnable{
-        double maxTime = 2500; // 2 sec
-        double startTime;
-        double speed_init;
-        boolean end = false;
-        public Linear_ScrollThread(double speed){
-            this.speed_init = speed;
-            this.startTime = System.currentTimeMillis()+500; // + 500ms as for 0.5se the speed should stay same
-        }
-        @Override
-        public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    if (scrollPane.isHover() && !end) {
-                        double deltaT = Math.max(System.currentTimeMillis() - startTime, 0);
-                        double deltaPx = speed_init - speed_init * (deltaT / maxTime);
-                        Runnable updater1 = () -> {
-                            currentSpeed = deltaPx;
-                        };
-                        Platform.runLater(updater1);
-                        scrollPane.scrollYBy(deltaPx);
-                        end = deltaT >= maxTime;
-                        if(end){
-                            Runnable updater = () -> {
-                                Message message = new Message("Server", "Info", "StoppedScroll");
-                                getCommunicator().sendMessage(message.makeMessage());
-                            };
-                            Platform.runLater(updater);
-                            Thread.currentThread().interrupt(); //end thread!!
-                            break;
-                        }
-                       Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
-                    }else{
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
-            } catch (InterruptedException e) {
-                //we need this because when a sleep the interrupt from outside throws an exception
-                Thread.currentThread().interrupt();
-            }
-        }
-
-    }
 
     // Fixed friction, with in exponential regression
     public class ExponentialRegression_ScrollThread implements Runnable{
