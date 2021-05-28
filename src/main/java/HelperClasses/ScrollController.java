@@ -27,7 +27,7 @@ public class ScrollController extends Controller{
     private Thread scrollThread;
     private Robot robot;
     //for flick
-    private double currentSpeed;
+   // private double currentSpeed;
    // private double scrollContentHeight;
    // private double lineHeight;
 
@@ -300,23 +300,15 @@ public class ScrollController extends Controller{
                 while (!Thread.currentThread().isInterrupted()) {
                     if (scrollPane.isHover() && !end) {
                         double deltaT_sec = Math.max(System.currentTimeMillis() - startTime, 0) / 1000;
+                        // used sec in reference paper
+                        // formula for the current rotation speed over time w(t) may be:   w(t) = w0*exp(-c*(t - t0))
+                        double friction = Math.exp ( -2.006 * deltaT_sec);
+                        double deltaPx = Math.abs (speed_init) * friction;
 
-                        //System.out.println("Friction = " + Math.exp ( -2.006 * deltaT_sec));
-                        //System.out.println("Init v " + speed_init);
+                        double newSpeed = Math.min(Math.abs(speed_init), deltaPx); // so its not faster then the original speed?! - needed because we want 0.5sec constant scroll before decel
+                        double scrollVal  = newSpeed * (speed_init / Math.abs(speed_init));  //to set the direction
 
-                        //formula for the current rotation speed over time w(t) may be:   w(t) = w0*exp(-c*(t - t0))
-                        // mm - sec
-                        double deltaPx = Math.abs (speed_init) * Math.exp ( -2.006 * deltaT_sec);
-                       // System.out.println(" new px (mm - sec) " + deltaPx);
-
-                        double move = deltaPx * (speed_init / Math.abs(speed_init)); //to set the direction
-                        double scrollBy = Math.min(speed_init, move); // so its not faster then the original speed?! - needed because we want 0.5sec constant scroll before decel
-                        scrollPane.scrollYBy(scrollBy);
-                        Runnable updater1 = () -> {
-                            currentSpeed = move;
-                        };
-                        Platform.runLater(updater1);
-
+                        scrollPane.scrollYBy(scrollVal);
                         end = deltaPx < 0.05;
                         if(end){
                             Runnable updater = () -> {
@@ -326,8 +318,9 @@ public class ScrollController extends Controller{
                             Platform.runLater(updater);
                             Thread.currentThread().interrupt(); //end thread!!
                             break;
+                        }else {
+                            Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
                         }
-                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
                     }else{
                         Thread.currentThread().interrupt();
                         break;
