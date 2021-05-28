@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ScrollController extends Controller{
 
@@ -169,7 +170,7 @@ public class ScrollController extends Controller{
                             if(scrollThread != null && !scrollThread.isInterrupted()){
                                 scrollThread.interrupt();
                             }
-                            scrollThread = new Thread(new ExponentialRegression_ScrollThread(pxPerMs));
+                            scrollThread = new Thread(new ExponentialRegression_ScrollThread(pxPerMs), "iOS Thread");
                             scrollThread.start();
 
                             break;
@@ -202,7 +203,7 @@ public class ScrollController extends Controller{
                             double addPx = Double.parseDouble(m.getValue());
                             currentSpeed = currentSpeed + addPx;
                             scrollThread.interrupt();
-                            scrollThread = new Thread(new Linear_ScrollThread(currentSpeed));
+                            scrollThread = new Thread(new Linear_ScrollThread(currentSpeed), "linear Scroll Thread");
                             scrollThread.start();
 
                             break;
@@ -228,14 +229,15 @@ public class ScrollController extends Controller{
                 case "TrackPoint":
                     if (m.getActionName().equals("deltaY")) {
 
-                        //stop old thread
-                        if (scrollPane.isHover() && scrollThread != null && !scrollThread.isInterrupted()) {
-                            scrollThread.interrupt();
-                        }
+                        if (scrollPane.isHover()) {
+                            if (scrollThread != null && !scrollThread.isInterrupted()) {
+                                scrollThread.interrupt();
+                            }
 
-                        double deltaY = Double.parseDouble(m.getValue()); //px
-                        scrollThread = new Thread(new Constant_ScrollThread(1, deltaY));
-                        scrollThread.start();
+                            double deltaY = Double.parseDouble(m.getValue()); //px
+                            scrollThread = new Thread(new Constant_ScrollThread(deltaY), "TrackPointer Thread");
+                            scrollThread.start();
+                        }
 
                     } else if (m.getActionName().equals("stop")) {
                         scrollThread.interrupt();
@@ -294,21 +296,23 @@ public class ScrollController extends Controller{
 
     // Continuous Scrolling
     public class Constant_ScrollThread implements Runnable{
-        int time;
-        double deltaPx;
-        public Constant_ScrollThread(int time, double px){
-            this.time = time;
-            this.deltaPx = px;
+
+        private final double deltaPx;
+        public Constant_ScrollThread(double deltaPx){
+            this.deltaPx = deltaPx;
         }
+
         @Override
         public void run() {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     if (scrollPane.isHover()) {
                         scrollPane.scrollYBy(deltaPx);
-                        Thread.sleep(time); //1 min = 60*1000, 1 sec = 1000
+                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
                     }else{
-                        scrollThread.interrupt();
+                        //scrollThread.interrupt();
+                        Thread.currentThread().interrupt();
+                        break;
                     }
                 }
             } catch (InterruptedException e) {
@@ -348,10 +352,13 @@ public class ScrollController extends Controller{
                                 getCommunicator().sendMessage(message.makeMessage());
                             };
                             Platform.runLater(updater);
+                            Thread.currentThread().interrupt(); //end thread!!
+                            break;
                         }
                        Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
                     }else{
-                        scrollThread.interrupt();
+                        Thread.currentThread().interrupt();
+                        break;
                     }
                 }
             } catch (InterruptedException e) {
@@ -401,10 +408,13 @@ public class ScrollController extends Controller{
                                 getCommunicator().sendMessage(message.makeMessage());
                             };
                             Platform.runLater(updater);
+                            Thread.currentThread().interrupt(); //end thread!!
+                            break;
                         }
                         Thread.sleep(1); //1 min = 60*1000, 1 sec = 1000
                     }else{
-                        scrollThread.interrupt();
+                        Thread.currentThread().interrupt();
+                        break;
                     }
                 }
             } catch (InterruptedException e) {

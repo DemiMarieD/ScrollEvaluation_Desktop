@@ -86,6 +86,7 @@ public class RichTextViewController extends ScrollController {
     private int trialInBlock;
     private Trial currentTrial;
     // private long startTime;
+    private int randomComIndex;
     private int targetIndex;
     private int targetNumber;
     private int distance; //in number of lines
@@ -379,8 +380,9 @@ public class RichTextViewController extends ScrollController {
         if(currentSet.size() == 0){
             if(blockNumber < maxBlocks){
                // System.out.println("__________ Block finished! Take a Break _________");
-                blockNumber++;
+
                 trialInBlock = 0;
+                blockNumber++;
 
                 if(blockNumber%2 != 0) {
                     setParametersForBlock();
@@ -409,9 +411,9 @@ public class RichTextViewController extends ScrollController {
 
             Random random = new Random();
 
-            int randomIndex = random.nextInt(currentSet.size());
-            int[] parameters = currentSet.get(randomIndex);
-            currentSet.remove(randomIndex);
+            randomComIndex = random.nextInt(currentSet.size());
+            int[] parameters = currentSet.get(randomComIndex);
+            //currentSet.remove(randomComIndex);
 
             frameSize = parameters[index_frame];
             updateFrameHeight();
@@ -639,7 +641,7 @@ public class RichTextViewController extends ScrollController {
        // System.out.println("Middle Index " + lM/2 ); // should be 18
        // int middleLine = getTextArea().visibleParToAllParIndex(middleIndex+1); // index start at 0 -> -1, but list starts with two "non visible items" -> -1+2 = +1
 
-        int visibleLines = (getTextArea().lastVisibleParToAllParIndex() - getTextArea().firstVisibleParToAllParIndex());
+        int visibleLines = (getTextArea().   lastVisibleParToAllParIndex() - getTextArea().firstVisibleParToAllParIndex());
         int middleLine = getTextArea().firstVisibleParToAllParIndex() + (visibleLines/2); //rounds down
        // System.out.println("Middle Line = " + (middleLine+1));
         int deltaLines = targetIndex - middleLine;
@@ -663,9 +665,12 @@ public class RichTextViewController extends ScrollController {
         if(inFrame){
            // System.out.println("-- Hit - dL " + deltaLines);
             rightPlayer.play();
+            //remove the combination from the list
+            currentSet.remove(randomComIndex);
             currentTrial.setHit(true);
         }else{
           //  System.out.println("-- Miss - dL " + deltaLines);
+            trialInBlock--; //reset trial in block, not really necessary
             wrongPlayer.play();
             currentTrial.setHit(false);
         }
