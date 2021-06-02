@@ -303,6 +303,7 @@ public class ScrollController extends Controller{
                         // used sec in reference paper
                         // formula for the current rotation speed over time w(t) may be:   w(t) = w0*exp(-c*(t - t0))
                         double friction = Math.exp ( -2.006 * deltaT_sec);
+                      //  System.out.println("Friction =" + friction);
                         double deltaPx = Math.abs (speed_init) * friction;
 
                         double newSpeed = Math.min(Math.abs(speed_init), deltaPx); // so its not faster then the original speed?! - needed because we want 0.5sec constant scroll before decel

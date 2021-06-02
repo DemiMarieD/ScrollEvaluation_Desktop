@@ -11,15 +11,17 @@
                 <Font size="32.0" />
             </font>
         </Label>
-        <Button layoutX="475.0" layoutY="414.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="227.0" text="Reciprocal Framing task" />
-        <Button layoutX="970.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedHyperlink" prefHeight="39.0" prefWidth="131.0" text="Search Task " />
-        <Button layoutX="1117.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedCount" prefHeight="39.0" prefWidth="131.0" text="Count Task" />
+        <Button layoutX="475.0" layoutY="450.0" mnemonicParsing="false" onAction="#clickedNext" prefHeight="39.0" prefWidth="227.0" text="Reciprocal Framing task" />
+        <!--Button layoutX="970.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedHyperlink" prefHeight="39.0" prefWidth="131.0" text="Search Task " />
+        <Button layoutX="1117.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedCount" prefHeight="39.0" prefWidth="131.0" text="Count Task" /-->
       <Button layoutX="85.0" layoutY="558.0" mnemonicParsing="false" onAction="#clickedBack" prefHeight="39.0" prefWidth="150.0" text="&lt; Back" />
       <Label fx:id="deviceLable" alignment="CENTER" contentDisplay="CENTER" layoutX="400.0" layoutY="254.0" prefHeight="27.0" prefWidth="377.0" text="DEVICE: " />
         <ComboBox fx:id="cb" layoutX="478.0" layoutY="294.0" prefHeight="25.0" prefWidth="227.0" promptText="Select Mode..." />
         <TextField fx:id="idField" layoutX="541.0" layoutY="335.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="0" />
-        <TextField fx:id="blocksField" layoutX="541.0" layoutY="367.0" prefHeight="25.0" prefWidth="74.0" promptText="ID" text="4" />
+        <TextField fx:id="blocksField" layoutX="541.0" layoutY="367.0" prefHeight="25.0" prefWidth="74.0" promptText="Blocks" text="4" />
+        <TextField fx:id="roundField" layoutX="541.0" layoutY="400.0" prefHeight="25.0" prefWidth="74.0" promptText="Round" text="0" />
       <Label layoutX="478.0" layoutY="339.0" prefHeight="17.0" prefWidth="60.0" text="Id:" />
         <Label layoutX="478.0" layoutY="371.0" prefHeight="17.0" prefWidth="60.0" text="#Blocks:" />
+        <Label layoutX="478.0" layoutY="404.0" prefHeight="17.0" prefWidth="60.0" text="Round:" />
     </children>
 </AnchorPane>

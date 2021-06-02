@@ -7,6 +7,16 @@ public class Data {
     private int participantID;
     private int numberOfBlocks;
 
+    public int getRoundNumber() {
+        return roundNumber;
+    }
+
+    public void setRoundNumber(int roundNumber) {
+        this.roundNumber = roundNumber;
+    }
+
+    private int roundNumber;
+
     public int getNumberOfBlocks() {
         return numberOfBlocks;
     }

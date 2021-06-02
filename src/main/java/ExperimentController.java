@@ -14,6 +14,8 @@ import java.util.Arrays;
 public class ExperimentController extends Controller {
 
     @FXML
+    private TextField roundField;
+    @FXML
     private TextField blocksField;
     @FXML
     private TextField idField;
@@ -68,6 +70,7 @@ public class ExperimentController extends Controller {
 
         getData().setParticipantID(Integer.parseInt(idField.getText()));
         getData().setNumberOfBlocks(Integer.parseInt(blocksField.getText()));
+        getData().setRoundNumber(Integer.parseInt(roundField.getText()));
 
         goToView("RichTextView.fxml");
     }

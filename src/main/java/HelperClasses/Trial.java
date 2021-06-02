@@ -11,6 +11,7 @@ public class Trial {
 
     int participantID;
     int trialNumber;
+    int roundNumber;
     int trialInBlock;
     int textLength;
     int visibleLines;
@@ -46,12 +47,9 @@ public class Trial {
     String scrollAreaSize_y;
 
 
-
-    //todo: add distance to trial on error !
-
-
-    public Trial(int participantID, int trialNumber, int trialInBlock, int block,  int targetLine, double frameHeight, int distance, String direction, Device device) {
+    public Trial(int participantID, int roundNumber, int trialNumber, int trialInBlock, int block,  int targetLine, double frameHeight, int distance, String direction, Device device) {
         this.participantID = participantID;
+        this.roundNumber = roundNumber;
         this.trialNumber = trialNumber;
         this.frameHeight = round2D(frameHeight);
         this.distance = distance;
@@ -71,7 +69,7 @@ public class Trial {
             Boolean isNew = !file.exists();
             writer = new BufferedWriter(new FileWriter(file, true));
             if(isNew){
-                String text = "ID, Device, Mode, Trial Number, Block Number, Trial in Block, Text Length (lines), Visible Lines, Frame Height, Distance, " +
+                String text = "ID, Device, Mode, Round, Trial, Block, Trial in Block, Text Length (lines), Visible Lines, Frame Height, Distance, " +
                         "Direction, Target Line, Line Height, Hit, T_Trial, T_Scroll, T_FineTune, T_Select, " +
                         "T_StartScrolling, errorDistance(lines), inFrameCount, visibleCount, Start direction, " +
                         "Finger count, FP_X-MIN, FP_Y-MIN, " +
@@ -119,14 +117,14 @@ public class Trial {
         //  "Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, (T) Start Scroll\n";
         String data = "";
         if(device == Device.MOOSE) {
-            data = participantID + "," + device.name() + "," + mode.getValue() + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," + visibleLines + "," +
+            data = participantID + "," + device.name() + "," + mode.getValue() + "," + roundNumber + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," + visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," +
                     posMin_x + "," + posMin_y + "," + posMax_x + "," + posMax_y + "," + scrollAreaSize_x + "," + scrollAreaSize_y + "," + pxPerMM +
                     "\n";
         }else{
-            data = participantID + "," + device.name() + "," + " --- " + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," +  visibleLines + "," +
+            data = participantID + "," + device.name() + "," + " --- " + "," + roundNumber + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," +  visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + ","  + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter + "," + startDirection+ ", ---, ---, ---, ---, ---, ---, ---," + pxPerMM +
