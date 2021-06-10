@@ -538,7 +538,7 @@ public class RichTextViewController extends ScrollController {
         targetVisible = isVisible();
         targetInFrame = isInFrame();
        // System.out.println("\n ________Trial START_______");
-        currentTrial = new Trial(getData().getParticipantID(), getData().getRoundNumber(), targetNumber, trialInBlock, blockNumber, targetIndex, frameSize, distance, direction, getData().getDevice());
+        currentTrial = new Trial(getData().getParticipantID(), getData().getPart(), getData().getRoundNumber(), targetNumber, trialInBlock, blockNumber, targetIndex, frameSize, distance, direction, getData().getDevice());
         currentTrial.setMode(getData().getMode());
         currentTrial.setVisibleLines(getNumberOfVisibleLines());
         currentTrial.setTextLength(totalNumberOfLines);

@@ -14,6 +14,8 @@ import java.util.Arrays;
 public class ExperimentController extends Controller {
 
     @FXML
+    private TextField partField;
+    @FXML
     private TextField roundField;
     @FXML
     private TextField blocksField;
@@ -40,6 +42,15 @@ public class ExperimentController extends Controller {
             cb.setVisible(true);
             cb.setItems(FXCollections.observableArrayList("Drag", new Separator(), "Circle", "Rubbing", "Flick", "Rate-Based")
             ); //new Separator(), can also be added
+        }
+
+        try{
+            idField.setText(String.valueOf(getData().getParticipantID()));
+            blocksField.setText("4");
+            roundField.setText(String.valueOf(getData().getRoundNumber()+1));
+            partField.setText(String.valueOf(getData().getPart()));
+        }catch (Exception e){
+            //nothing saved yet?
         }
 
     }
@@ -71,6 +82,7 @@ public class ExperimentController extends Controller {
         getData().setParticipantID(Integer.parseInt(idField.getText()));
         getData().setNumberOfBlocks(Integer.parseInt(blocksField.getText()));
         getData().setRoundNumber(Integer.parseInt(roundField.getText()));
+        getData().setPartNum(Integer.parseInt(partField.getText()));
 
         goToView("RichTextView.fxml");
     }

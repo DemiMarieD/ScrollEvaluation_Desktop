@@ -245,6 +245,9 @@ public class ScrollController extends Controller{
                 trial.setPosMax_x(max_val[0]);
                 trial.setPosMax_y(max_val[1]);
                 //assuming that this is send after finger count
+
+               // trial.setClutchCount(data[3]);
+
                 trial.writeTrial();
             }
 

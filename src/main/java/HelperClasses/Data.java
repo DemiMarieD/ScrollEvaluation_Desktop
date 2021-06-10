@@ -6,6 +6,7 @@ public class Data {
 
     private int participantID;
     private int numberOfBlocks;
+    private int partNum;
 
     public int getRoundNumber() {
         return roundNumber;
@@ -47,5 +48,13 @@ public class Data {
 
     public void setMode(ScrollingMode mode) {
         this.mode = mode;
+    }
+
+    public void setPartNum(int partNum) {
+        this.partNum = partNum;
+    }
+
+    public int getPart() {
+        return partNum;
     }
 }
