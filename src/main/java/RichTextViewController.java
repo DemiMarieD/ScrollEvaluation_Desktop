@@ -96,7 +96,7 @@ public class RichTextViewController extends ScrollController {
     private boolean scrollStarted;
     private boolean targetVisible;
     private boolean targetInFrame;
-
+    private long lastSpacePressTime;
 
     private MediaPlayer wrongPlayer;
     private MediaPlayer rightPlayer;
@@ -111,6 +111,7 @@ public class RichTextViewController extends ScrollController {
             setController(this);
         }
 
+        lastSpacePressTime = System.currentTimeMillis();
         getMainPane().addEventFilter(KeyEvent.KEY_PRESSED, event->{
             if (event.getCode() == KeyCode.SPACE) {
                 if(finished){
@@ -128,8 +129,12 @@ public class RichTextViewController extends ScrollController {
                     initTrial();
                     */
                 }else if(!breakSet) {
-                    checkTarget();
+                    //only if no double click on keyboard
+                    if(System.currentTimeMillis() - lastSpacePressTime > 200) {
+                        checkTarget();
+                    }
                 }
+                lastSpacePressTime = System.currentTimeMillis();
             }
         });
 

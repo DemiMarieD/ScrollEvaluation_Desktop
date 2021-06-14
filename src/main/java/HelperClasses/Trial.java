@@ -119,7 +119,7 @@ public class Trial {
         //  "Target Line, Line Height, Hit, (T) Trial, (T) Scroll, (T) Fine Tune, (T) Select, (T) Start Scroll\n";
         String data = "";
         if(device == Device.MOOSE) {
-            data = participantID + "," + device.name() + "," + mode.getValue() + "," + expPart + "," + roundNumber + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," + visibleLines + "," +
+                 data = participantID + "," + device.name() + "," + mode.getValue() + "," + expPart + "," + roundNumber + "," + trialNumber + "," + block + "," + trialInBlock + "," + textLength + "," + visibleLines + "," +
                     frameHeight + "," + distance + "," + direction + "," + targetLine + "," + lineHeight + "," + hit + "," + deltaTime_total + "," +
                     deltaTime_scroll + "," + deltaTime_fineTune + "," + deltaTime_select + "," + deltaTime_startScroll + "," + distanceFromMiddle + "," +
                     targetInFrame_counter + "," + targetVisible_counter+ "," + startDirection+ "," + fingerCount+ "," +
